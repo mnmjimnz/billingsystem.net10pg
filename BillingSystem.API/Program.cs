@@ -1,5 +1,6 @@
 using System.Text;
 using BillingSystem.Domain.Interfaces;
+using BillingSystem.Application.Interfaces;
 using BillingSystem.Infrastructure.Data;
 using BillingSystem.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -15,7 +16,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll",
-        policy => policy.SetIsOriginAllowed(_ => true)
+        policy => policy.WithOrigins("http://127.0.0.1:5500", "http://localhost:5500", "https://billingsystem-net10pg.onrender.com")
                         .AllowAnyMethod()
                         .AllowAnyHeader()
                         .AllowCredentials());
@@ -46,6 +47,7 @@ builder.Services.AddScoped<BillingSystem.Application.Interfaces.IPurchaseService
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.IKardexService, BillingSystem.Application.Services.KardexService>();
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.IReceivableService, BillingSystem.Application.Services.ReceivableService>();
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.INotificationService, BillingSystem.API.Services.NotificationService>();
+builder.Services.AddScoped<BillingSystem.Application.Interfaces.IReportService, BillingSystem.Application.Services.ReportService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

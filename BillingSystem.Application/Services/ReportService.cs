@@ -1,0 +1,45 @@
+using BillingSystem.Application.DTOs;
+using BillingSystem.Application.Interfaces;
+using BillingSystem.Domain.Interfaces;
+
+namespace BillingSystem.Application.Services;
+
+public class ReportService : IReportService
+{
+    private readonly IReportRepository _repo;
+
+    public ReportService(IReportRepository repo)
+    {
+        _repo = repo;
+    }
+
+    public async Task<IEnumerable<SalesReportDto>> GetSalesReportAsync(ReportFilterDto filter)
+    {
+        return await _repo.GetSalesReportAsync(filter);
+    }
+
+    public async Task<IEnumerable<TopProductDto>> GetTopProductsAsync(int limit)
+    {
+        return await _repo.GetTopProductsAsync(limit);
+    }
+
+    public async Task<IEnumerable<TopSupplierDto>> GetTopSuppliersAsync(int limit)
+    {
+        return await _repo.GetTopSuppliersAsync(limit);
+    }
+
+    public async Task<IEnumerable<CashFlowDto>> GetCashFlowAsync(ReportFilterDto filter)
+    {
+        return await _repo.GetCashFlowAsync(filter);
+    }
+
+    public async Task<IEnumerable<KardexReportDto>> GetKardexReportAsync(ReportFilterDto filter)
+    {
+        return await _repo.GetKardexReportAsync(filter);
+    }
+
+    public async Task<IEnumerable<SalesComparisonDto>> GetSalesComparisonAsync(string periodType, ReportFilterDto filter)
+    {
+        return await _repo.GetSalesComparisonAsync(periodType, filter);
+    }
+}
