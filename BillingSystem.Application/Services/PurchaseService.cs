@@ -3,8 +3,6 @@ using BillingSystem.Application.DTOs;
 using BillingSystem.Application.Interfaces;
 using BillingSystem.Domain.Entities;
 using BillingSystem.Domain.Interfaces;
-using Microsoft.AspNetCore.SignalR;
-using BillingSystem.API.Hubs;
 
 namespace BillingSystem.Application.Services;
 
@@ -15,7 +13,7 @@ public class PurchaseService : IPurchaseService
     private readonly IKardexRepository _kardexRepo;
     private readonly IPayableRepository _payableRepo;
     private readonly INotificationRepository _notificationRepo;
-    private readonly IHubContext<NotificationHub> _hubContext;
+    private readonly INotificationService _notificationService;
 
     public PurchaseService(
         IPurchaseRepository purchaseRepo,
@@ -23,14 +21,14 @@ public class PurchaseService : IPurchaseService
         IKardexRepository kardexRepo,
         IPayableRepository payableRepo,
         INotificationRepository notificationRepo,
-        IHubContext<NotificationHub> hubContext)
+        INotificationService notificationService)
     {
         _purchaseRepo = purchaseRepo;
         _productRepo = productRepo;
         _kardexRepo = kardexRepo;
         _payableRepo = payableRepo;
         _notificationRepo = notificationRepo;
-        _hubContext = hubContext;
+        _notificationService = notificationService;
     }
 
     public async Task<int> CreatePurchaseAsync(PurchaseDto dto, int userId)
@@ -95,7 +93,7 @@ public class PurchaseService : IPurchaseService
             };
 
             await _notificationRepo.AddAsync(notification);
-            await _hubContext.Clients.All.SendAsync("ReceiveNotification", notification.Title, notification.Message);
+            await _notificationService.DispatchNotificationAsync(notification.Title, notification.Message, notification.Type, purchaseId);
         }
 
         scope.Complete();
