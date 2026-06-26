@@ -20,7 +20,7 @@ public class ReportRepository : IReportRepository
                 s.TicketNumber,
                 s.CreatedAt,
                 c.Name as CustomerName,
-                u.Name as UserName,
+                u.FullName as UserName,
                 b.Name as BranchName,
                 s.Total,
                 s.PaymentType
