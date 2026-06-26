@@ -1,0 +1,200 @@
+-- PostgreSQL Init Script
+
+CREATE TABLE Roles (
+    Id SERIAL PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Description VARCHAR(255),
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE Branches (
+    Id SERIAL PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    Address VARCHAR(255),
+    Phone VARCHAR(50),
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE Users (
+    Id SERIAL PRIMARY KEY,
+    Username VARCHAR(50) NOT NULL UNIQUE,
+    PasswordHash VARCHAR(255) NOT NULL,
+    FullName VARCHAR(100) NOT NULL,
+    RoleId INT REFERENCES Roles(Id),
+    BranchId INT REFERENCES Branches(Id),
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE Categories (
+    Id SERIAL PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    Description VARCHAR(255),
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE Products (
+    Id SERIAL PRIMARY KEY,
+    Barcode VARCHAR(100) UNIQUE,
+    Name VARCHAR(100) NOT NULL,
+    Description TEXT,
+    Price DECIMAL(12,2) NOT NULL,
+    Cost DECIMAL(12,2) NOT NULL,
+    Stock INT NOT NULL DEFAULT 0,
+    CategoryId INT REFERENCES Categories(Id),
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE Customers (
+    Id SERIAL PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    DocumentNumber VARCHAR(50),
+    Email VARCHAR(100),
+    Phone VARCHAR(50),
+    Address VARCHAR(255),
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE Suppliers (
+    Id SERIAL PRIMARY KEY,
+    Name VARCHAR(100) NOT NULL,
+    DocumentNumber VARCHAR(50),
+    ContactName VARCHAR(100),
+    Email VARCHAR(100),
+    Phone VARCHAR(50),
+    Address VARCHAR(255),
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE Sales (
+    Id SERIAL PRIMARY KEY,
+    TicketNumber VARCHAR(50) NOT NULL UNIQUE,
+    Date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CustomerId INT REFERENCES Customers(Id),
+    UserId INT REFERENCES Users(Id),
+    BranchId INT REFERENCES Branches(Id),
+    Subtotal DECIMAL(12,2) NOT NULL,
+    Discount DECIMAL(12,2) NOT NULL DEFAULT 0,
+    Total DECIMAL(12,2) NOT NULL,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE SaleDetails (
+    Id SERIAL PRIMARY KEY,
+    SaleId INT REFERENCES Sales(Id),
+    ProductId INT REFERENCES Products(Id),
+    Quantity INT NOT NULL,
+    UnitPrice DECIMAL(12,2) NOT NULL,
+    Subtotal DECIMAL(12,2) NOT NULL,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE Purchases (
+    Id SERIAL PRIMARY KEY,
+    InvoiceNumber VARCHAR(50) NOT NULL,
+    Date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    SupplierId INT REFERENCES Suppliers(Id),
+    UserId INT REFERENCES Users(Id),
+    Total DECIMAL(12,2) NOT NULL,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE PurchaseDetails (
+    Id SERIAL PRIMARY KEY,
+    PurchaseId INT REFERENCES Purchases(Id),
+    ProductId INT REFERENCES Products(Id),
+    Quantity INT NOT NULL,
+    UnitCost DECIMAL(12,2) NOT NULL,
+    Subtotal DECIMAL(12,2) NOT NULL,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE InventoryMovements (
+    Id SERIAL PRIMARY KEY,
+    ProductId INT REFERENCES Products(Id),
+    MovementType VARCHAR(10) NOT NULL, -- IN, OUT
+    ReferenceType VARCHAR(20) NOT NULL, -- SALE, PURCHASE, ADJUSTMENT
+    ReferenceId INT,
+    Quantity INT NOT NULL,
+    PreviousStock INT NOT NULL,
+    NewStock INT NOT NULL,
+    Description VARCHAR(255),
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE CashRegisters (
+    Id SERIAL PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    BranchId INT REFERENCES Branches(Id),
+    Description VARCHAR(255),
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE CashRegisterSessions (
+    Id SERIAL PRIMARY KEY,
+    CashRegisterId INT REFERENCES CashRegisters(Id),
+    UserId INT REFERENCES Users(Id),
+    OpeningTime TIMESTAMP NOT NULL,
+    ClosingTime TIMESTAMP,
+    OpeningBalance DECIMAL(12,2) NOT NULL,
+    ClosingBalance DECIMAL(12,2),
+    DeclaredBalance DECIMAL(12,2),
+    Status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE JournalEntries (
+    Id SERIAL PRIMARY KEY,
+    Date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Description VARCHAR(255) NOT NULL,
+    ReferenceType VARCHAR(20),
+    ReferenceId INT,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+CREATE TABLE JournalEntryDetails (
+    Id SERIAL PRIMARY KEY,
+    JournalEntryId INT REFERENCES JournalEntries(Id),
+    AccountCode VARCHAR(20) NOT NULL,
+    AccountName VARCHAR(100) NOT NULL,
+    Debit DECIMAL(12,2) NOT NULL DEFAULT 0,
+    Credit DECIMAL(12,2) NOT NULL DEFAULT 0,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UpdatedAt TIMESTAMP,
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+-- Insert default data
+INSERT INTO Roles (Name, Description) VALUES ('Admin', 'System Administrator'), ('Cashier', 'Point of Sale Cashier');
+INSERT INTO Branches (Name, Address) VALUES ('Main Branch', '123 Main St');
+-- Password hash for 'admin' (using a dummy hash for now, needs proper bcrypt hashing later)
+INSERT INTO Users (Username, PasswordHash, FullName, RoleId, BranchId) VALUES ('admin', 'admin_hash_placeholder', 'Admin User', 1, 1);

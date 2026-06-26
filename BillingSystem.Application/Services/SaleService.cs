@@ -1,0 +1,128 @@
+using System.Transactions;
+using BillingSystem.Application.DTOs;
+using BillingSystem.Application.Interfaces;
+using BillingSystem.Domain.Entities;
+using BillingSystem.Domain.Interfaces;
+
+namespace BillingSystem.Application.Services;
+
+public class SaleService : ISaleService
+{
+    private readonly ISaleRepository _saleRepo;
+    private readonly IProductRepository _productRepo;
+    private readonly IKardexRepository _kardexRepo;
+    private readonly IReceivableRepository _receivableRepo;
+    private readonly INotificationRepository _notificationRepo;
+    private readonly INotificationService _notificationService;
+
+    public SaleService(
+        ISaleRepository saleRepo,
+        IProductRepository productRepo,
+        IKardexRepository kardexRepo,
+        IReceivableRepository receivableRepo,
+        INotificationRepository notificationRepo,
+        INotificationService notificationService)
+    {
+        _saleRepo = saleRepo;
+        _productRepo = productRepo;
+        _kardexRepo = kardexRepo;
+        _receivableRepo = receivableRepo;
+        _notificationRepo = notificationRepo;
+        _notificationService = notificationService;
+    }
+
+    public async Task<(int SaleId, string TicketNumber)> CreateSaleAsync(CreateSaleRequest request, int userId, int branchId)
+    {
+        var sale = new Sale
+        {
+            TicketNumber = "TKT-" + DateTime.Now.ToString("yyyyMMddHHmmss"),
+            CustomerId = request.CustomerId ?? 1,
+            UserId = userId == 0 ? 1 : userId,
+            BranchId = branchId == 0 ? 1 : branchId,
+            Subtotal = request.Subtotal,
+            Discount = request.Discount,
+            Total = request.Total,
+            PaymentType = request.PaymentType,
+            AmountTendered = request.AmountTendered,
+            Change = request.Change,
+            Status = request.PaymentType == "CREDIT" ? "PENDING" : "PAID"
+        };
+
+        using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+
+        // 1. Insert Sale & Details
+        var saleId = await _saleRepo.CreateSaleWithDetailsAsync(sale, request.Details);
+
+        // 2. Update Stock and Kardex
+        foreach (var detail in request.Details)
+        {
+            var product = await _productRepo.GetByIdAsync(detail.ProductId);
+            if (product != null)
+            {
+                // Log Movement
+                var movement = new InventoryMovement
+                {
+                    ProductId = detail.ProductId,
+                    MovementType = "OUT",
+                    ReferenceType = "SALE",
+                    ReferenceId = saleId,
+                    Quantity = detail.Quantity,
+                    PreviousStock = product.Stock,
+                    NewStock = product.Stock - detail.Quantity,
+                    Description = "Venta desde POS"
+                };
+                await _kardexRepo.AddMovementAsync(movement);
+
+                // Update Stock
+                await _productRepo.UpdateStockAsync(detail.ProductId, -detail.Quantity);
+            }
+        }
+
+        // 3. Handle Credit Sales
+        if (sale.PaymentType == "CREDIT")
+        {
+            var initialBalance = sale.Total - sale.AmountTendered;
+            if (initialBalance < 0) initialBalance = 0;
+
+            var account = new AccountsReceivable
+            {
+                SaleId = saleId,
+                CustomerId = sale.CustomerId,
+                TotalDebt = sale.Total,
+                Balance = initialBalance,
+                DueDate = DateTime.UtcNow.AddDays(30),
+                Status = initialBalance <= 0 ? "PAID" : "PENDING"
+            };
+            var arId = await _receivableRepo.CreateAsync(account);
+
+            if (sale.AmountTendered > 0)
+            {
+                var payment = new ReceivablePayment
+                {
+                    AccountId = arId,
+                    UserId = sale.UserId,
+                    Amount = sale.AmountTendered,
+                    Notes = "Abono inicial en punto de venta"
+                };
+                await _receivableRepo.AddPaymentAsync(payment);
+            }
+
+            if (initialBalance > 0)
+            {
+                var msg = $"Se generó una venta al crédito por ${sale.Total} al cliente ID {sale.CustomerId}.";
+                var notif = new Notification
+                {
+                    Title = "Venta al Crédito",
+                    Message = msg,
+                    Type = "CREDIT_SALE",
+                    ReferenceId = arId
+                };
+                await _notificationRepo.AddAsync(notif);
+                await _notificationService.DispatchNotificationAsync(notif.Title, notif.Message, notif.Type, arId); 
+            }
+        }
+
+        scope.Complete();
+        return (saleId, sale.TicketNumber);
+    }
+}
