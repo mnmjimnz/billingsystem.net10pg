@@ -42,4 +42,8 @@ public class ReportService : IReportService
     {
         return await _repo.GetSalesComparisonAsync(periodType, filter);
     }
+    public async Task<DashboardDataDto> GetDashboardDataAsync()
+    {
+        return await _repo.GetDashboardDataAsync();
+    }
 }

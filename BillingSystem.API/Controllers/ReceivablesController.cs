@@ -29,7 +29,7 @@ public class ReceivablesController : ControllerBase
     {
         try
         {
-            int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId);
+            int.TryParse(User.FindFirst("UserId")?.Value, out int userId);
             await _receivableService.RegisterPaymentAsync(id, userId == 0 ? 1 : userId, request.Amount, request.Notes ?? string.Empty);
             return Ok(new { message = "Abono registrado correctamente." });
         }

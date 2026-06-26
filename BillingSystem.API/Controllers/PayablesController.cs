@@ -35,7 +35,7 @@ public class PayablesController : ControllerBase
             return BadRequest("Monto inválido");
 
         payment.AccountId = id;
-        payment.UserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+        payment.UserId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
 
         await _repo.AddPaymentAsync(payment);
         await _repo.UpdateAccountBalanceAsync(id, payment.Amount);

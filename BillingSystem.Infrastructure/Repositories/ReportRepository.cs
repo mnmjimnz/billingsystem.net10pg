@@ -223,4 +223,24 @@ public class ReportRepository : IReportRepository
 
         return await connection.QueryAsync<SalesComparisonDto>(sql, filter);
     }
+    public async Task<DashboardDataDto> GetDashboardDataAsync()
+    {
+        using var connection = _db.CreateConnection();
+        var today = DateTime.Today;
+
+        var stats = new DashboardStatsDto();
+
+        stats.TodaySales = await connection.ExecuteScalarAsync<decimal>("SELECT COALESCE(SUM(Total), 0) FROM Sales WHERE DATE(CreatedAt) = CURRENT_DATE");
+        stats.TodayPurchases = await connection.ExecuteScalarAsync<decimal>("SELECT COALESCE(SUM(Total), 0) FROM Purchases WHERE DATE(CreatedAt) = CURRENT_DATE");
+        stats.TotalProducts = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Products WHERE IsActive = TRUE");
+        stats.TotalCustomers = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Customers WHERE IsActive = TRUE");
+
+        var topProducts = await GetTopProductsAsync(5);
+
+        return new DashboardDataDto
+        {
+            Stats = stats,
+            TopProducts = topProducts
+        };
+    }
 }

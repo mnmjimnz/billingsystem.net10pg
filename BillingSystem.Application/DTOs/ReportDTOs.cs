@@ -69,3 +69,17 @@ public class SalesComparisonDto
     public decimal TotalSales { get; set; }
     public int SaleCount { get; set; }
 }
+
+public class DashboardStatsDto
+{
+    public decimal TodaySales { get; set; }
+    public decimal TodayPurchases { get; set; }
+    public int TotalProducts { get; set; }
+    public int TotalCustomers { get; set; }
+}
+
+public class DashboardDataDto
+{
+    public DashboardStatsDto Stats { get; set; } = new();
+    public IEnumerable<TopProductDto> TopProducts { get; set; } = new List<TopProductDto>();
+}

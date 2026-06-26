@@ -97,4 +97,10 @@ public class ReportsController : ControllerBase
         var result = await _reportService.GetSalesComparisonAsync(periodType, filter);
         return Ok(result);
     }
+    [HttpGet("dashboard")]
+    public async Task<IActionResult> GetDashboard()
+    {
+        var result = await _reportService.GetDashboardDataAsync();
+        return Ok(result);
+    }
 }

@@ -20,7 +20,7 @@ public class SalesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateSale([FromBody] CreateSaleRequest request)
     {
-        int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out int userId);
+        int.TryParse(User.FindFirst("UserId")?.Value, out int userId);
         int.TryParse(User.FindFirst("BranchId")?.Value, out int branchId);
 
         var result = await _saleService.CreateSaleAsync(request, userId, branchId);
