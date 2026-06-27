@@ -47,4 +47,32 @@ public class UserRepository : IUserRepository
         using var connection = _connectionFactory.CreateConnection();
         return await connection.QueryFirstOrDefaultAsync<User>("SELECT * FROM Users WHERE Username = @Username AND IsActive = TRUE", new { Username = username });
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<User>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var searchPattern = $"%{search}%";
+        var offset = (page - 1) * pageSize;
+        var limit = pageSize > 0 ? pageSize : 10;
+        
+        var baseSql = "FROM Users WHERE IsActive = TRUE";
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            baseSql += " AND (Username ILIKE @Search OR FullName ILIKE @Search)";
+        }
+        
+        var countSql = $"SELECT COUNT(*) {baseSql}";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = searchPattern });
+        
+        var dataSql = $"SELECT * {baseSql} ORDER BY Id DESC LIMIT @Limit OFFSET @Offset";
+        var items = await connection.QueryAsync<User>(dataSql, new { Search = searchPattern, Limit = limit, Offset = offset });
+        
+        return new BillingSystem.Domain.Models.PagedResult<User>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
 }

@@ -81,6 +81,23 @@ public class ReportsController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("paged-kardex")]
+    public async Task<IActionResult> GetPagedKardex(
+        [FromQuery] DateTime? startDate, 
+        [FromQuery] DateTime? endDate,
+        [FromQuery] string search = "",
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var filter = new ReportFilterDto
+        {
+            StartDate = startDate,
+            EndDate = endDate
+        };
+        var result = await _reportService.GetPagedKardexAsync(filter, search, page, pageSize);
+        return Ok(result);
+    }
+
     [HttpGet("sales-comparison")]
     public async Task<IActionResult> GetSalesComparison(
         [FromQuery] string periodType = "day",

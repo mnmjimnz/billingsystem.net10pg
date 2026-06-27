@@ -59,8 +59,8 @@ public class ReportRepository : IReportRepository
                 p.Id as ProductId,
                 p.Name as ProductName,
                 p.Barcode,
-                SUM(sd.Quantity) as TotalQuantitySold,
-                SUM(sd.Subtotal) as TotalRevenue
+                CAST(COALESCE(SUM(sd.Quantity), 0) AS INT) as TotalQuantitySold,
+                COALESCE(SUM(sd.Subtotal), 0) as TotalRevenue
             FROM SaleDetails sd
             JOIN Products p ON sd.ProductId = p.Id
             GROUP BY p.Id, p.Name, p.Barcode
@@ -77,8 +77,8 @@ public class ReportRepository : IReportRepository
             SELECT 
                 s.Id as SupplierId,
                 s.Name as SupplierName,
-                COUNT(p.Id) as TotalPurchases,
-                SUM(p.Total) as TotalVolume
+                CAST(COUNT(p.Id) AS INT) as TotalPurchases,
+                COALESCE(SUM(p.Total), 0) as TotalVolume
             FROM Purchases p
             JOIN Suppliers s ON p.SupplierId = s.Id
             GROUP BY s.Id, s.Name
@@ -186,6 +186,38 @@ public class ReportRepository : IReportRepository
         return await connection.QueryAsync<KardexReportDto>(sql, filter);
     }
 
+    public async Task<BillingSystem.Domain.Models.PagedResult<KardexReportDto>> GetPagedKardexAsync(ReportFilterDto filter, string search, int page, int pageSize)
+    {
+        using var connection = _db.CreateConnection();
+        var searchPattern = $"%{search}%";
+        var offset = (page - 1) * pageSize;
+        var limit = pageSize > 0 ? pageSize : 10;
+        
+        var baseSql = @"FROM InventoryMovements im JOIN Products p ON im.ProductId = p.Id WHERE 1=1 ";
+        
+        if (filter.StartDate.HasValue) baseSql += " AND im.CreatedAt >= @StartDate ";
+        if (filter.EndDate.HasValue) baseSql += " AND im.CreatedAt <= @EndDate ";
+        
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            baseSql += " AND (im.Description ILIKE @Search OR p.Name ILIKE @Search OR im.MovementType ILIKE @Search OR im.ReferenceType ILIKE @Search)";
+        }
+        
+        var countSql = $"SELECT COUNT(*) {baseSql}";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = searchPattern, StartDate = filter.StartDate, EndDate = filter.EndDate });
+        
+        var dataSql = $"SELECT im.Id, p.Name as ProductName, im.MovementType, im.ReferenceType, im.ReferenceId, im.Quantity, im.PreviousStock, im.NewStock, im.Description, im.CreatedAt {baseSql} ORDER BY im.CreatedAt DESC LIMIT @Limit OFFSET @Offset";
+        var items = await connection.QueryAsync<KardexReportDto>(dataSql, new { Search = searchPattern, StartDate = filter.StartDate, EndDate = filter.EndDate, Limit = limit, Offset = offset });
+        
+        return new BillingSystem.Domain.Models.PagedResult<KardexReportDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
+
     public async Task<IEnumerable<SalesComparisonDto>> GetSalesComparisonAsync(string periodType, ReportFilterDto filter)
     {
         using var connection = _db.CreateConnection();
@@ -232,8 +264,8 @@ public class ReportRepository : IReportRepository
 
         stats.TodaySales = await connection.ExecuteScalarAsync<decimal>("SELECT COALESCE(SUM(Total), 0) FROM Sales WHERE DATE(CreatedAt) = CURRENT_DATE");
         stats.TodayPurchases = await connection.ExecuteScalarAsync<decimal>("SELECT COALESCE(SUM(Total), 0) FROM Purchases WHERE DATE(CreatedAt) = CURRENT_DATE");
-        stats.TotalProducts = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Products WHERE IsActive = TRUE");
-        stats.TotalCustomers = await connection.ExecuteScalarAsync<int>("SELECT COUNT(*) FROM Customers WHERE IsActive = TRUE");
+        stats.TotalProducts = await connection.ExecuteScalarAsync<int>("SELECT CAST(COUNT(*) AS INT) FROM Products WHERE IsActive = TRUE");
+        stats.TotalCustomers = await connection.ExecuteScalarAsync<int>("SELECT CAST(COUNT(*) AS INT) FROM Customers WHERE IsActive = TRUE");
 
         var topProducts = await GetTopProductsAsync(5);
 

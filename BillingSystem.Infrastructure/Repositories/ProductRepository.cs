@@ -61,4 +61,32 @@ public class ProductRepository : IProductRepository
                     WHERE Id = @Id";
         await connection.ExecuteAsync(sql, new { QuantityChange = quantityChange, NewCost = newCost, Id = productId });
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<Product>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        using var connection = _db.CreateConnection();
+        var searchPattern = $"%{search}%";
+        var offset = (page - 1) * pageSize;
+        var limit = pageSize > 0 ? pageSize : 10;
+        
+        var baseSql = "FROM Products WHERE IsActive = TRUE";
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            baseSql += " AND (Name ILIKE @Search OR Description ILIKE @Search OR Barcode ILIKE @Search)";
+        }
+        
+        var countSql = $"SELECT COUNT(*) {baseSql}";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = searchPattern });
+        
+        var dataSql = $"SELECT * {baseSql} ORDER BY Id DESC LIMIT @Limit OFFSET @Offset";
+        var items = await connection.QueryAsync<Product>(dataSql, new { Search = searchPattern, Limit = limit, Offset = offset });
+        
+        return new BillingSystem.Domain.Models.PagedResult<Product>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
 }

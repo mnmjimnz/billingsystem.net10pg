@@ -42,6 +42,12 @@ public class RoleRepository : IRoleRepository
         return await connection.ExecuteAsync(sql, entity);
     }
 
+    public Task<BillingSystem.Domain.Models.PagedResult<Role>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        // Simple stub since Roles usually don't need pagination but it's required by the interface
+        return Task.FromResult(new BillingSystem.Domain.Models.PagedResult<Role>());
+    }
+
     public async Task<IEnumerable<Permission>> GetAllPermissionsAsync()
     {
         using var connection = _connectionFactory.CreateConnection();

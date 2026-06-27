@@ -99,4 +99,9 @@ public class PurchaseService : IPurchaseService
         scope.Complete();
         return purchaseId;
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        return await _purchaseRepo.GetPagedAsync(search, page, pageSize);
+    }
 }

@@ -25,6 +25,12 @@ public class PayablesController : ControllerBase
         return Ok(pending);
     }
 
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        return Ok(await _repo.GetPagedAsync(search, page, pageSize));
+    }
+
     [HttpPost("{id}/payments")]
     public async Task<IActionResult> AddPayment(int id, [FromBody] PayablePayment payment)
     {

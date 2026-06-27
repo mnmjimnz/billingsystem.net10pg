@@ -24,4 +24,10 @@ public class PurchasesController : ControllerBase
         var id = await _service.CreatePurchaseAsync(dto, userId);
         return Ok(new { id });
     }
+
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        return Ok(await _service.GetPagedAsync(search, page, pageSize));
+    }
 }

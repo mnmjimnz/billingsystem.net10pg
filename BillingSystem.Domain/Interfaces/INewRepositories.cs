@@ -6,6 +6,7 @@ public interface IKardexRepository
 {
     Task<IEnumerable<dynamic>> GetAllMovementsAsync(int? productId);
     Task AddMovementAsync(InventoryMovement movement);
+    Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize);
 }
 
 public interface IReceivableRepository
@@ -15,6 +16,7 @@ public interface IReceivableRepository
     Task UpdateAccountAndAddPaymentAsync(AccountsReceivable account, ReceivablePayment payment);
     Task<int> CreateAsync(AccountsReceivable account);
     Task AddPaymentAsync(ReceivablePayment payment);
+    Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize);
 }
 
 public interface INotificationRepository

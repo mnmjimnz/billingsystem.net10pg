@@ -11,4 +11,5 @@ public interface IReportRepository
     Task<IEnumerable<KardexReportDto>> GetKardexReportAsync(ReportFilterDto filter);
     Task<IEnumerable<SalesComparisonDto>> GetSalesComparisonAsync(string periodType, ReportFilterDto filter);
     Task<DashboardDataDto> GetDashboardDataAsync();
+    Task<BillingSystem.Domain.Models.PagedResult<KardexReportDto>> GetPagedKardexAsync(ReportFilterDto filter, string search, int page, int pageSize);
 }

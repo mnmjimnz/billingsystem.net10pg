@@ -74,4 +74,9 @@ public class ReceivableService : IReceivableService
 
         scope.Complete();
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        return await _receivableRepo.GetPagedAsync(search, page, pageSize);
+    }
 }

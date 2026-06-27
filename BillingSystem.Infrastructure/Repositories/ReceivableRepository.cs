@@ -54,4 +54,36 @@ public class ReceivableRepository : IReceivableRepository
                        VALUES (@AccountId, @UserId, @Amount, @Notes)";
         await connection.ExecuteAsync(paySql, payment);
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        using var connection = _db.CreateConnection();
+        var searchPattern = $"%{search}%";
+        var offset = (page - 1) * pageSize;
+        var limit = pageSize > 0 ? pageSize : 10;
+        
+        var baseSql = @"FROM AccountsReceivable a 
+                        JOIN Customers c ON a.CustomerId = c.Id
+                        JOIN Sales s ON a.SaleId = s.Id
+                        WHERE a.IsActive = TRUE";
+        
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            baseSql += " AND (a.Status ILIKE @Search OR c.Name ILIKE @Search OR s.TicketNumber ILIKE @Search)";
+        }
+        
+        var countSql = $"SELECT COUNT(*) {baseSql}";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = searchPattern });
+        
+        var dataSql = $"SELECT a.*, c.Name as CustomerName, s.TicketNumber {baseSql} ORDER BY a.CreatedAt DESC LIMIT @Limit OFFSET @Offset";
+        var items = await connection.QueryAsync<dynamic>(dataSql, new { Search = searchPattern, Limit = limit, Offset = offset });
+        
+        return new BillingSystem.Domain.Models.PagedResult<dynamic>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
 }

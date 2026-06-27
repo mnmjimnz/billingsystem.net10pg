@@ -5,12 +5,14 @@ namespace BillingSystem.Application.Interfaces;
 public interface IKardexService
 {
     Task<IEnumerable<KardexDto>> GetAllMovementsAsync(int? productId);
+    Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize);
 }
 
 public interface IReceivableService
 {
     Task<IEnumerable<ReceivableDto>> GetReceivablesAsync();
     Task RegisterPaymentAsync(int id, int userId, decimal amount, string notes);
+    Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize);
 }
 
 public interface INotificationService

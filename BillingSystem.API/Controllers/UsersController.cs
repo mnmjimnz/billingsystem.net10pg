@@ -15,6 +15,12 @@ public class UsersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll() => Ok(await _repo.GetAllAsync());
 
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        return Ok(await _repo.GetPagedAsync(search, page, pageSize));
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] BillingSystem.Domain.Entities.User user)
     {

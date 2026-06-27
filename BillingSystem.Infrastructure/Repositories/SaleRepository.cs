@@ -16,6 +16,12 @@ public class SaleRepository : ISaleRepository
     public Task<int> AddAsync(Sale entity) => throw new NotImplementedException();
     public Task<int> UpdateAsync(Sale entity) => throw new NotImplementedException();
 
+    public Task<BillingSystem.Domain.Models.PagedResult<Sale>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        // Not implemented since Sale pagination wasn't explicitly requested, but required by interface
+        return Task.FromResult(new BillingSystem.Domain.Models.PagedResult<Sale>());
+    }
+
     public async Task<int> CreateSaleWithDetailsAsync(Sale sale, IEnumerable<SaleDetail> details)
     {
         using var connection = _db.CreateConnection();

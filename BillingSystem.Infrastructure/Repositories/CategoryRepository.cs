@@ -31,8 +31,36 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<int> UpdateAsync(Category entity)
     {
-        using var db = _conn.CreateConnection();
-        var sql = "UPDATE Categories SET Name = @Name, Description = @Description, UpdatedAt = @UpdatedAt, IsActive = @IsActive WHERE Id = @Id;";
-        return await db.ExecuteAsync(sql, entity);
+        using var connection = _conn.CreateConnection();
+        var sql = "UPDATE Categories SET Name = @Name, Description = @Description, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @Id;";
+        return await connection.ExecuteAsync(sql, entity);
+    }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<Category>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        using var connection = _conn.CreateConnection();
+        var searchPattern = $"%{search}%";
+        var offset = (page - 1) * pageSize;
+        var limit = pageSize > 0 ? pageSize : 10;
+        
+        var baseSql = "FROM Categories WHERE IsActive = TRUE";
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            baseSql += " AND (Name ILIKE @Search OR Description ILIKE @Search)";
+        }
+        
+        var countSql = $"SELECT COUNT(*) {baseSql}";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = searchPattern });
+        
+        var dataSql = $"SELECT * {baseSql} ORDER BY Id DESC LIMIT @Limit OFFSET @Offset";
+        var items = await connection.QueryAsync<Category>(dataSql, new { Search = searchPattern, Limit = limit, Offset = offset });
+        
+        return new BillingSystem.Domain.Models.PagedResult<Category>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 }

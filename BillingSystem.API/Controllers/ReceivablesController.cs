@@ -24,6 +24,12 @@ public class ReceivablesController : ControllerBase
         return Ok(result);
     }
 
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        return Ok(await _receivableService.GetPagedAsync(search, page, pageSize));
+    }
+
     [HttpPost("{id}/pay")]
     public async Task<IActionResult> RegisterPayment(int id, [FromBody] PaymentRequest request)
     {

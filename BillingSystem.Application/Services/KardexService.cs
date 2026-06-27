@@ -33,4 +33,31 @@ public class KardexService : IKardexService
             CreatedAt = d.createdat
         });
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        var pagedData = await _kardexRepo.GetPagedAsync(search, page, pageSize);
+        // We will map dynamic to dynamic or a specific DTO shape in the controller
+        return new BillingSystem.Domain.Models.PagedResult<dynamic>
+        {
+            Items = pagedData.Items.Select(d => new KardexDto
+            {
+                Id = d.id,
+                ProductId = d.productid,
+                ProductName = d.productname,
+                Barcode = d.barcode,
+                MovementType = d.movementtype,
+                ReferenceType = d.referencetype,
+                ReferenceId = d.referenceid,
+                Quantity = d.quantity,
+                PreviousStock = d.previousstock,
+                NewStock = d.newstock,
+                Description = d.description,
+                CreatedAt = d.createdat
+            }),
+            TotalCount = pagedData.TotalCount,
+            Page = pagedData.Page,
+            PageSize = pagedData.PageSize
+        };
+    }
 }

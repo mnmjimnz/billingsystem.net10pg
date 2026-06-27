@@ -22,4 +22,11 @@ public class KardexController : ControllerBase
         var result = await _kardexService.GetAllMovementsAsync(productId);
         return Ok(result);
     }
+
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var result = await _kardexService.GetPagedAsync(search, page, pageSize);
+        return Ok(result);
+    }
 }

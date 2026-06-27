@@ -46,4 +46,8 @@ public class ReportService : IReportService
     {
         return await _repo.GetDashboardDataAsync();
     }
+    public async Task<BillingSystem.Domain.Models.PagedResult<KardexReportDto>> GetPagedKardexAsync(ReportFilterDto filter, string search, int page, int pageSize)
+    {
+        return await _repo.GetPagedKardexAsync(filter, search, page, pageSize);
+    }
 }

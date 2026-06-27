@@ -24,6 +24,12 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        return Ok(await _productRepository.GetPagedAsync(search, page, pageSize));
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetById(int id)
     {

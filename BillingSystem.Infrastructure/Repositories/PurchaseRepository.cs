@@ -37,4 +37,36 @@ public class PurchaseRepository : IPurchaseRepository
     public Task<IEnumerable<Purchase>> GetAllAsync() => throw new NotImplementedException();
     public Task<int> AddAsync(Purchase entity) => throw new NotImplementedException();
     public Task<int> UpdateAsync(Purchase entity) => throw new NotImplementedException();
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        using var connection = _db.CreateConnection();
+        var searchPattern = $"%{search}%";
+        var offset = (page - 1) * pageSize;
+        var limit = pageSize > 0 ? pageSize : 10;
+        
+        var baseSql = @"FROM Purchases p 
+                        JOIN Suppliers s ON p.SupplierId = s.Id
+                        JOIN Users u ON p.UserId = u.Id
+                        WHERE p.IsActive = TRUE";
+        
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            baseSql += " AND (p.InvoiceNumber ILIKE @Search OR p.PaymentType ILIKE @Search OR p.Status ILIKE @Search OR s.Name ILIKE @Search OR u.FullName ILIKE @Search)";
+        }
+        
+        var countSql = $"SELECT COUNT(*) {baseSql}";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = searchPattern });
+        
+        var dataSql = $"SELECT p.*, s.Name as SupplierName, u.FullName as UserName {baseSql} ORDER BY p.CreatedAt DESC LIMIT @Limit OFFSET @Offset";
+        var items = await connection.QueryAsync<dynamic>(dataSql, new { Search = searchPattern, Limit = limit, Offset = offset });
+        
+        return new BillingSystem.Domain.Models.PagedResult<dynamic>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
 }

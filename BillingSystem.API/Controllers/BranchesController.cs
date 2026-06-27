@@ -18,10 +18,12 @@ public class BranchesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll() => Ok(await _repo.GetAllAsync());
+
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var branches = await _repo.GetAllAsync();
-        return Ok(branches);
+        return Ok(await _repo.GetPagedAsync(search, page, pageSize));
     }
 
     [HttpGet("{id}")]
