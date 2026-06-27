@@ -23,13 +23,25 @@ public class CashRegisterService : ICashRegisterService
         return await _cashRepo.GetActiveSessionAsync(userId);
     }
 
-    public async Task<int> OpenSessionAsync(int userId, int branchId, decimal openingBalance)
+    public async Task<int> OpenSessionAsync(int userId, int cashRegisterId, decimal openingBalance)
     {
         var existing = await _cashRepo.GetActiveSessionAsync(userId);
         if (existing != null) throw new Exception("El usuario ya tiene una caja abierta.");
 
-        var register = await _cashRepo.GetDefaultRegisterAsync(branchId);
-        if (register == null) throw new Exception("No hay cajas registradoras disponibles en esta sucursal.");
+        var register = await _cashRepo.GetByIdAsync(cashRegisterId);
+        if (register == null) throw new Exception("La caja seleccionada no existe.");
+
+        var branch = await _branchRepo.GetByIdAsync(register.BranchId);
+        if (branch == null) throw new Exception("La sucursal de esta caja no existe.");
+
+        if (branch.AvailableFunds < openingBalance)
+            throw new Exception($"La sucursal no tiene fondos suficientes. Saldo disponible: ${branch.AvailableFunds:F2}");
+
+        using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+
+        // Deduct from branch
+        branch.AvailableFunds -= openingBalance;
+        await _branchRepo.UpdateAsync(branch);
 
         var session = new CashRegisterSession
         {
@@ -38,7 +50,10 @@ public class CashRegisterService : ICashRegisterService
             OpeningBalance = openingBalance,
             Status = "OPEN"
         };
-        return await _cashRepo.OpenSessionAsync(session);
+        var sessionId = await _cashRepo.OpenSessionAsync(session);
+
+        scope.Complete();
+        return sessionId;
     }
 
     public async Task<object?> GetSessionSummaryAsync(int userId)
@@ -74,12 +89,15 @@ public class CashRegisterService : ICashRegisterService
         await _cashRepo.CloseSessionAsync(session);
 
         // Move funds to branch
-        var register = await _cashRepo.GetDefaultRegisterAsync(1); // Need branch ID from register
-        var branch = await _branchRepo.GetByIdAsync(register!.BranchId);
-        if (branch != null)
+        var register = await _cashRepo.GetByIdAsync(session.CashRegisterId);
+        if (register != null)
         {
-            branch.AvailableFunds += calculatedBalance;
-            await _branchRepo.UpdateAsync(branch);
+            var branch = await _branchRepo.GetByIdAsync(register.BranchId);
+            if (branch != null)
+            {
+                branch.AvailableFunds += calculatedBalance;
+                await _branchRepo.UpdateAsync(branch);
+            }
         }
 
         scope.Complete();

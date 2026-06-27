@@ -46,7 +46,11 @@ public class BranchesController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, [FromBody] Branch branch)
     {
+        var existing = await _repo.GetByIdAsync(id);
+        if (existing == null) return NotFound(new { message = "Sucursal no encontrada" });
+
         branch.Id = id;
+        branch.AvailableFunds = existing.AvailableFunds;
         branch.UpdatedAt = DateTime.UtcNow;
         await _repo.UpdateAsync(branch);
         return Ok(new { message = "Sucursal actualizada exitosamente" });

@@ -59,4 +59,41 @@ public class CashRegisterRepository : ICashRegisterRepository
         }
         return reg;
     }
+
+    public async Task<CashRegister?> GetByIdAsync(int id)
+    {
+        using var connection = _db.CreateConnection();
+        return await connection.QueryFirstOrDefaultAsync<CashRegister>("SELECT * FROM CashRegisters WHERE Id = @Id", new { Id = id });
+    }
+
+    public async Task<IEnumerable<CashRegister>> GetByBranchIdAsync(int branchId)
+    {
+        using var connection = _db.CreateConnection();
+        return await connection.QueryAsync<CashRegister>("SELECT * FROM CashRegisters WHERE BranchId = @BranchId", new { BranchId = branchId });
+    }
+
+    public async Task<int> AddAsync(CashRegister register)
+    {
+        using var connection = _db.CreateConnection();
+        var sql = @"INSERT INTO CashRegisters (Name, BranchId, Description, CreatedAt, IsActive) 
+                    VALUES (@Name, @BranchId, @Description, CURRENT_TIMESTAMP, @IsActive) RETURNING Id;";
+        return await connection.ExecuteScalarAsync<int>(sql, register);
+    }
+
+    public async Task<int> UpdateAsync(CashRegister register)
+    {
+        using var connection = _db.CreateConnection();
+        var sql = @"UPDATE CashRegisters 
+                    SET Name = @Name, 
+                        Description = @Description, 
+                        UpdatedAt = CURRENT_TIMESTAMP 
+                    WHERE Id = @Id;";
+        return await connection.ExecuteAsync(sql, register);
+    }
+
+    public async Task UpdateStatusAsync(int id, bool isActive)
+    {
+        using var connection = _db.CreateConnection();
+        await connection.ExecuteAsync("UPDATE CashRegisters SET IsActive = @IsActive, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @Id", new { IsActive = isActive, Id = id });
+    }
 }

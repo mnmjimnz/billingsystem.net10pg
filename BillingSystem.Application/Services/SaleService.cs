@@ -42,6 +42,12 @@ public class SaleService : ISaleService
         var session = await _cashRepo.GetActiveSessionAsync(userId);
         if (session == null) throw new Exception("Debe aperturar su caja antes de poder realizar ventas.");
 
+        var currentSalesTotal = await _saleRepo.GetSessionSalesTotalAsync(userId, session.OpeningTime);
+        var physicalCash = session.OpeningBalance + currentSalesTotal;
+
+        if (request.PaymentType != "CREDIT" && request.Change > physicalCash)
+            throw new Exception($"La caja no cuenta con suficiente dinero físico para dar el cambio. Efectivo disponible: ${physicalCash:F2}. Solicite asignación de saldo al encargado.");
+
         var settings = await _settingsRepo.GetSettingsAsync();
         decimal taxPercentage = settings.TaxPercentage / 100m;
         

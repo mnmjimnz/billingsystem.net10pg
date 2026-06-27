@@ -29,8 +29,8 @@ public class BranchRepository : IBranchRepository
     public async Task<int> AddAsync(Branch entity)
     {
         using var connection = _connectionFactory.CreateConnection();
-        var sql = @"INSERT INTO Branches (Name, Address, Phone, CreatedAt, IsActive) 
-                    VALUES (@Name, @Address, @Phone, @CreatedAt, @IsActive) RETURNING Id;";
+        var sql = @"INSERT INTO Branches (Name, Address, Phone, AvailableFunds, CreatedAt, IsActive) 
+                    VALUES (@Name, @Address, @Phone, @AvailableFunds, @CreatedAt, @IsActive) RETURNING Id;";
         return await connection.ExecuteScalarAsync<int>(sql, entity);
     }
 

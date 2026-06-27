@@ -31,7 +31,7 @@ public class CashRegistersController : ControllerBase
     {
         try
         {
-            var id = await _cashService.OpenSessionAsync(GetCurrentUserId(), req.BranchId, req.OpeningBalance);
+            var id = await _cashService.OpenSessionAsync(GetCurrentUserId(), req.CashRegisterId, req.OpeningBalance);
             return Ok(new { success = true, sessionId = id });
         }
         catch (Exception ex)
@@ -72,7 +72,7 @@ public class CashRegistersController : ControllerBase
 
 public class OpenSessionRequest
 {
-    public int BranchId { get; set; }
+    public int CashRegisterId { get; set; }
     public decimal OpeningBalance { get; set; }
 }
 
