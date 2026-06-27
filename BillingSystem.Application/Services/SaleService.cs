@@ -14,6 +14,7 @@ public class SaleService : ISaleService
     private readonly IReceivableRepository _receivableRepo;
     private readonly INotificationRepository _notificationRepo;
     private readonly INotificationService _notificationService;
+    private readonly ICashRegisterRepository _cashRepo;
 
     public SaleService(
         ISaleRepository saleRepo,
@@ -21,7 +22,8 @@ public class SaleService : ISaleService
         IKardexRepository kardexRepo,
         IReceivableRepository receivableRepo,
         INotificationRepository notificationRepo,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ICashRegisterRepository cashRepo)
     {
         _saleRepo = saleRepo;
         _productRepo = productRepo;
@@ -29,10 +31,14 @@ public class SaleService : ISaleService
         _receivableRepo = receivableRepo;
         _notificationRepo = notificationRepo;
         _notificationService = notificationService;
+        _cashRepo = cashRepo;
     }
 
     public async Task<(int SaleId, string TicketNumber)> CreateSaleAsync(CreateSaleRequest request, int userId, int branchId)
     {
+        var session = await _cashRepo.GetActiveSessionAsync(userId);
+        if (session == null) throw new Exception("Debe aperturar su caja antes de poder realizar ventas.");
+
         var sale = new Sale
         {
             TicketNumber = "TKT-" + DateTime.Now.ToString("yyyyMMddHHmmss"),

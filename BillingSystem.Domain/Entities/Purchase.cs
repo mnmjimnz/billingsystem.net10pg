@@ -8,6 +8,8 @@ public class Purchase : BaseEntity
     public Supplier? Supplier { get; set; }
     public int UserId { get; set; }
     public User? User { get; set; }
+    public int BranchId { get; set; }
+    public Branch? Branch { get; set; }
     public decimal Total { get; set; }
     public string PaymentType { get; set; } = "CASH";
     public decimal AmountPaid { get; set; }

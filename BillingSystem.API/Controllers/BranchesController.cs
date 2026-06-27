@@ -51,4 +51,28 @@ public class BranchesController : ControllerBase
         await _repo.UpdateAsync(branch);
         return Ok(new { message = "Sucursal actualizada exitosamente" });
     }
+
+    [HttpPost("{id}/open")]
+    public async Task<IActionResult> Open(int id)
+    {
+        var branch = await _repo.GetByIdAsync(id);
+        if (branch == null) return NotFound();
+
+        branch.Status = "OPEN";
+        branch.UpdatedAt = DateTime.UtcNow;
+        await _repo.UpdateAsync(branch);
+        return Ok(new { success = true, message = "Sucursal aperturada exitosamente" });
+    }
+
+    [HttpPost("{id}/close")]
+    public async Task<IActionResult> Close(int id)
+    {
+        var branch = await _repo.GetByIdAsync(id);
+        if (branch == null) return NotFound();
+
+        branch.Status = "CLOSED";
+        branch.UpdatedAt = DateTime.UtcNow;
+        await _repo.UpdateAsync(branch);
+        return Ok(new { success = true, message = "Sucursal cerrada exitosamente" });
+    }
 }

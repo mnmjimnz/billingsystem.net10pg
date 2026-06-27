@@ -14,6 +14,7 @@ public class PurchaseService : IPurchaseService
     private readonly IPayableRepository _payableRepo;
     private readonly INotificationRepository _notificationRepo;
     private readonly INotificationService _notificationService;
+    private readonly IBranchRepository _branchRepo;
 
     public PurchaseService(
         IPurchaseRepository purchaseRepo,
@@ -21,7 +22,8 @@ public class PurchaseService : IPurchaseService
         IKardexRepository kardexRepo,
         IPayableRepository payableRepo,
         INotificationRepository notificationRepo,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        IBranchRepository branchRepo)
     {
         _purchaseRepo = purchaseRepo;
         _productRepo = productRepo;
@@ -29,15 +31,30 @@ public class PurchaseService : IPurchaseService
         _payableRepo = payableRepo;
         _notificationRepo = notificationRepo;
         _notificationService = notificationService;
+        _branchRepo = branchRepo;
     }
 
     public async Task<int> CreatePurchaseAsync(PurchaseDto dto, int userId)
     {
+        var branch = await _branchRepo.GetByIdAsync(dto.BranchId);
+        if (branch == null) throw new Exception("La sucursal seleccionada no existe.");
+        if (branch.Status != "OPEN") throw new Exception("No se pueden realizar compras porque la sucursal está CERRADA.");
+
+        if (dto.AmountPaid > 0)
+        {
+            if (branch.AvailableFunds < dto.AmountPaid)
+            {
+                throw new Exception($"Fondos insuficientes en la sucursal. Disponible: ${branch.AvailableFunds}, Requerido: ${dto.AmountPaid}");
+            }
+            branch.AvailableFunds -= dto.AmountPaid;
+        }
+
         var purchase = new Purchase
         {
             InvoiceNumber = dto.InvoiceNumber,
             SupplierId = dto.SupplierId,
             UserId = userId,
+            BranchId = dto.BranchId,
             Total = dto.Total,
             PaymentType = dto.PaymentType,
             AmountPaid = dto.AmountPaid,
@@ -45,6 +62,11 @@ public class PurchaseService : IPurchaseService
         };
 
         using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+
+        if (dto.AmountPaid > 0)
+        {
+            await _branchRepo.UpdateAsync(branch);
+        }
 
         var purchaseId = await _purchaseRepo.CreatePurchaseWithDetailsAsync(purchase, dto.Details);
 

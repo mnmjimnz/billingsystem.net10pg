@@ -14,8 +14,8 @@ public class PurchaseRepository : IPurchaseRepository
     {
         using var connection = _db.CreateConnection();
         var purchaseSql = @"
-            INSERT INTO Purchases (InvoiceNumber, SupplierId, UserId, Total, PaymentType, AmountPaid, Status, CreatedAt, IsActive)
-            VALUES (@InvoiceNumber, @SupplierId, @UserId, @Total, @PaymentType, @AmountPaid, @Status, CURRENT_TIMESTAMP, TRUE)
+            INSERT INTO Purchases (InvoiceNumber, SupplierId, UserId, BranchId, Total, PaymentType, AmountPaid, Status, CreatedAt, IsActive)
+            VALUES (@InvoiceNumber, @SupplierId, @UserId, @BranchId, @Total, @PaymentType, @AmountPaid, @Status, CURRENT_TIMESTAMP, TRUE)
             RETURNING Id;";
         
         var purchaseId = await connection.ExecuteScalarAsync<int>(purchaseSql, purchase);
@@ -48,6 +48,7 @@ public class PurchaseRepository : IPurchaseRepository
         var baseSql = @"FROM Purchases p 
                         JOIN Suppliers s ON p.SupplierId = s.Id
                         JOIN Users u ON p.UserId = u.Id
+                        JOIN Branches b ON p.BranchId = b.Id
                         WHERE p.IsActive = TRUE";
         
         if (!string.IsNullOrWhiteSpace(search))
@@ -58,7 +59,7 @@ public class PurchaseRepository : IPurchaseRepository
         var countSql = $"SELECT COUNT(*) {baseSql}";
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = searchPattern });
         
-        var dataSql = $"SELECT p.*, s.Name as SupplierName, u.FullName as UserName {baseSql} ORDER BY p.CreatedAt DESC LIMIT @Limit OFFSET @Offset";
+        var dataSql = $"SELECT p.*, s.Name as SupplierName, u.FullName as UserName, b.Name as BranchName {baseSql} ORDER BY p.CreatedAt DESC LIMIT @Limit OFFSET @Offset";
         var items = await connection.QueryAsync<dynamic>(dataSql, new { Search = searchPattern, Limit = limit, Offset = offset });
         
         return new BillingSystem.Domain.Models.PagedResult<dynamic>
