@@ -41,12 +41,27 @@ public class CashRegistersController : ControllerBase
     }
 
     [HttpPost("close")]
-    public async Task<IActionResult> CloseSession([FromBody] CloseSessionRequest req)
+    public async Task<IActionResult> CloseSession()
     {
         try
         {
-            await _cashService.CloseSessionAsync(GetCurrentUserId(), req.DeclaredBalance);
+            await _cashService.CloseSessionAsync(GetCurrentUserId());
             return Ok(new { success = true, message = "Caja cerrada y fondos trasladados a la sucursal." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpGet("session-summary")]
+    public async Task<IActionResult> GetSessionSummary()
+    {
+        try
+        {
+            var summary = await _cashService.GetSessionSummaryAsync(GetCurrentUserId());
+            if (summary == null) return Ok(new { success = false, message = "No hay caja abierta." });
+            return Ok(new { success = true, data = summary });
         }
         catch (Exception ex)
         {

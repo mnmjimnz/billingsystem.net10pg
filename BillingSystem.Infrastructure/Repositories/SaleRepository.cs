@@ -38,4 +38,12 @@ public class SaleRepository : ISaleRepository
 
         return saleId;
     }
+
+    public async Task<decimal> GetSessionSalesTotalAsync(int userId, DateTime since)
+    {
+        using var connection = _db.CreateConnection();
+        var sql = @"SELECT COALESCE(SUM(Total), 0) FROM Sales 
+                    WHERE UserId = @UserId AND Date >= @Since AND Status = 'PAID'";
+        return await connection.ExecuteScalarAsync<decimal>(sql, new { UserId = userId, Since = since });
+    }
 }

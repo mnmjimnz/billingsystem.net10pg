@@ -41,25 +41,35 @@ public class CashRegisterService : ICashRegisterService
         return await _cashRepo.OpenSessionAsync(session);
     }
 
-    public async Task CloseSessionAsync(int userId, decimal declaredBalance)
+    public async Task<object?> GetSessionSummaryAsync(int userId)
+    {
+        var session = await _cashRepo.GetActiveSessionAsync(userId);
+        if (session == null) return null;
+
+        var salesTotal = await _saleRepo.GetSessionSalesTotalAsync(userId, session.OpeningTime);
+        var expectedBalance = session.OpeningBalance + salesTotal;
+
+        return new
+        {
+            session.OpeningBalance,
+            salesTotal,
+            expectedBalance,
+            session.OpeningTime
+        };
+    }
+
+    public async Task CloseSessionAsync(int userId)
     {
         var session = await _cashRepo.GetActiveSessionAsync(userId);
         if (session == null) throw new Exception("No hay ninguna sesión de caja abierta.");
 
-        // Calcular ventas realizadas en este turno
-        // Asumiendo que podemos obtener las ventas del usuario desde OpeningTime
-        // Pero de manera más fácil: vamos a confiar en el declared balance,
-        // Y el sistema sumará (OpeningBalance + Ventas del turno) para el ClosingBalance real
-        // Para simplificar aquí, guardamos lo declarado y movemos ese dinero a la sucursal.
-        
-        // Lo correcto en un POS es calcular total en base de datos.
-        // Simularemos un cálculo rápido sumando ventas. (Requiere método en repo)
-        // Por ahora transferimos el DeclaredBalance a la sucursal.
+        var salesTotal = await _saleRepo.GetSessionSalesTotalAsync(userId, session.OpeningTime);
+        var calculatedBalance = session.OpeningBalance + salesTotal;
 
         using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
-        session.ClosingBalance = declaredBalance; // Ideally should be calculated
-        session.DeclaredBalance = declaredBalance;
+        session.ClosingBalance = calculatedBalance;
+        session.DeclaredBalance = calculatedBalance; // Since no manual entry, declared = calculated
 
         await _cashRepo.CloseSessionAsync(session);
 
@@ -68,7 +78,7 @@ public class CashRegisterService : ICashRegisterService
         var branch = await _branchRepo.GetByIdAsync(register!.BranchId);
         if (branch != null)
         {
-            branch.AvailableFunds += declaredBalance;
+            branch.AvailableFunds += calculatedBalance;
             await _branchRepo.UpdateAsync(branch);
         }
 
