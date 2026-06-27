@@ -56,11 +56,10 @@ public class BranchesController : ControllerBase
     public async Task<IActionResult> Open(int id)
     {
         var branch = await _repo.GetByIdAsync(id);
-        if (branch == null) return NotFound();
+        if (branch == null) return NotFound(new { success = false, message = "Sucursal no encontrada" });
+        if (branch.Status == "OPEN") return Ok(new { success = true, message = "La sucursal ya se encuentra abierta" });
 
-        branch.Status = "OPEN";
-        branch.UpdatedAt = DateTime.UtcNow;
-        await _repo.UpdateAsync(branch);
+        await _repo.UpdateStatusAsync(id, "OPEN");
         return Ok(new { success = true, message = "Sucursal aperturada exitosamente" });
     }
 
@@ -68,11 +67,10 @@ public class BranchesController : ControllerBase
     public async Task<IActionResult> Close(int id)
     {
         var branch = await _repo.GetByIdAsync(id);
-        if (branch == null) return NotFound();
+        if (branch == null) return NotFound(new { success = false, message = "Sucursal no encontrada" });
+        if (branch.Status == "CLOSED") return Ok(new { success = true, message = "La sucursal ya se encuentra cerrada" });
 
-        branch.Status = "CLOSED";
-        branch.UpdatedAt = DateTime.UtcNow;
-        await _repo.UpdateAsync(branch);
+        await _repo.UpdateStatusAsync(id, "CLOSED");
         return Ok(new { success = true, message = "Sucursal cerrada exitosamente" });
     }
 }

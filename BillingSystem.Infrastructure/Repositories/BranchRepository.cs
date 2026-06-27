@@ -37,8 +37,31 @@ public class BranchRepository : IBranchRepository
     public async Task<int> UpdateAsync(Branch entity)
     {
         using var connection = _connectionFactory.CreateConnection();
-        var sql = "UPDATE Branches SET Name = @Name, Address = @Address, Phone = @Phone, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @Id;";
+        var sql = @"UPDATE Branches 
+                    SET Name = @Name, 
+                        Address = @Address, 
+                        Phone = @Phone, 
+                        Status = @Status,
+                        AvailableFunds = @AvailableFunds,
+                        UpdatedAt = CURRENT_TIMESTAMP 
+                    WHERE Id = @Id;";
         return await connection.ExecuteAsync(sql, entity);
+    }
+
+    public async Task UpdateStatusAsync(int id, string status)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(
+            "UPDATE Branches SET Status = @Status, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @Id",
+            new { Status = status, Id = id });
+    }
+
+    public async Task UpdateFundsAsync(int id, decimal amount)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.ExecuteAsync(
+            "UPDATE Branches SET AvailableFunds = AvailableFunds + @Amount, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @Id",
+            new { Amount = amount, Id = id });
     }
 
     public async Task<BillingSystem.Domain.Models.PagedResult<Branch>> GetPagedAsync(string search, int page, int pageSize)
