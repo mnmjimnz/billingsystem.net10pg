@@ -120,4 +120,38 @@ public class ReportsController : ControllerBase
         var result = await _reportService.GetDashboardDataAsync();
         return Ok(result);
     }
+
+    [HttpGet("user-activity")]
+    public async Task<IActionResult> GetUserActivity([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] int? userId, [FromQuery] int? branchId)
+    {
+        var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate, UserId = userId, BranchId = branchId };
+        return Ok(await _reportService.GetUserActivityAsync(filter));
+    }
+
+    [HttpGet("balance-sheet")]
+    public async Task<IActionResult> GetBalanceSheet()
+    {
+        return Ok(await _reportService.GetBalanceSheetAsync());
+    }
+
+    [HttpGet("income-statement")]
+    public async Task<IActionResult> GetIncomeStatement([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
+    {
+        var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate };
+        return Ok(await _reportService.GetIncomeStatementAsync(filter));
+    }
+
+    [HttpGet("purchases")]
+    public async Task<IActionResult> GetPurchases([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] int? branchId)
+    {
+        var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate, BranchId = branchId };
+        return Ok(await _reportService.GetPurchasesReportAsync(filter));
+    }
+
+    [HttpGet("sales-analytics")]
+    public async Task<IActionResult> GetSalesAnalytics([FromQuery] string groupBy = "month", [FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null)
+    {
+        var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate };
+        return Ok(await _reportService.GetSalesAnalyticsAsync(groupBy, filter));
+    }
 }

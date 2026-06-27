@@ -12,4 +12,9 @@ public interface IReportService
     Task<IEnumerable<SalesComparisonDto>> GetSalesComparisonAsync(string periodType, ReportFilterDto filter);
     Task<DashboardDataDto> GetDashboardDataAsync();
     Task<BillingSystem.Domain.Models.PagedResult<KardexReportDto>> GetPagedKardexAsync(ReportFilterDto filter, string search, int page, int pageSize);
+    Task<IEnumerable<UserActivityDto>> GetUserActivityAsync(ReportFilterDto filter);
+    Task<BalanceSheetDto> GetBalanceSheetAsync();
+    Task<IncomeStatementDto> GetIncomeStatementAsync(ReportFilterDto filter);
+    Task<IEnumerable<PurchaseReportDto>> GetPurchasesReportAsync(ReportFilterDto filter);
+    Task<IEnumerable<SalesAnalyticsDto>> GetSalesAnalyticsAsync(string groupBy, ReportFilterDto filter);
 }

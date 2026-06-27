@@ -83,3 +83,63 @@ public class DashboardDataDto
     public DashboardStatsDto Stats { get; set; } = new();
     public IEnumerable<TopProductDto> TopProducts { get; set; } = new List<TopProductDto>();
 }
+
+// New Reports DTOs
+
+public class UserActivityDto
+{
+    public int SessionId { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string BranchName { get; set; } = string.Empty;
+    public DateTime OpeningTime { get; set; }
+    public DateTime? ClosingTime { get; set; }
+    public decimal OpeningBalance { get; set; }
+    public decimal ClosingBalance { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
+public class IncomeStatementDto
+{
+    public decimal Revenue { get; set; }
+    public decimal CostOfGoodsSold { get; set; }
+    public decimal GrossProfit => Revenue - CostOfGoodsSold;
+    public decimal OperatingExpenses { get; set; }
+    public decimal NetIncome => GrossProfit - OperatingExpenses;
+}
+
+public class BalanceSheetDto
+{
+    // Activos
+    public decimal CashAndEquivalents { get; set; }
+    public decimal InventoryValue { get; set; }
+    public decimal AccountsReceivable { get; set; }
+    public decimal TotalAssets => CashAndEquivalents + InventoryValue + AccountsReceivable;
+
+    // Pasivos
+    public decimal AccountsPayable { get; set; }
+    public decimal TotalLiabilities => AccountsPayable;
+
+    // Patrimonio
+    public decimal Equity => TotalAssets - TotalLiabilities;
+}
+
+public class PurchaseReportDto
+{
+    public int PurchaseId { get; set; }
+    public string InvoiceNumber { get; set; } = string.Empty;
+    public DateTime Date { get; set; }
+    public string SupplierName { get; set; } = string.Empty;
+    public string BranchName { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
+    public decimal Total { get; set; }
+    public string PaymentType { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+}
+
+public class SalesAnalyticsDto
+{
+    public string GroupKey { get; set; } = string.Empty; // Date or Month
+    public decimal CashSales { get; set; }
+    public decimal CreditSales { get; set; }
+    public decimal TotalSales => CashSales + CreditSales;
+}

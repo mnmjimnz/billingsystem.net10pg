@@ -288,4 +288,136 @@ public class ReportRepository : IReportRepository
             TopProducts = topProducts
         };
     }
+
+    public async Task<IEnumerable<UserActivityDto>> GetUserActivityAsync(ReportFilterDto filter)
+    {
+        using var connection = _db.CreateConnection();
+        var sql = @"
+            SELECT 
+                crs.Id as SessionId,
+                u.FullName as UserName,
+                b.Name as BranchName,
+                crs.OpeningTime,
+                crs.ClosingTime,
+                crs.OpeningBalance,
+                crs.ClosingBalance,
+                crs.Status
+            FROM CashRegisterSessions crs
+            JOIN Users u ON crs.UserId = u.Id
+            JOIN CashRegisters cr ON crs.CashRegisterId = cr.Id
+            JOIN Branches b ON cr.BranchId = b.Id
+            WHERE 1=1 ";
+
+        if (filter.StartDate.HasValue) sql += " AND crs.OpeningTime >= @StartDate ";
+        if (filter.EndDate.HasValue) sql += " AND crs.OpeningTime <= @EndDate ";
+        if (filter.UserId.HasValue && filter.UserId > 0) sql += " AND crs.UserId = @UserId ";
+        if (filter.BranchId.HasValue && filter.BranchId > 0) sql += " AND cr.BranchId = @BranchId ";
+
+        sql += " ORDER BY crs.OpeningTime DESC";
+
+        return await connection.QueryAsync<UserActivityDto>(sql, filter);
+    }
+
+    public async Task<BalanceSheetDto> GetBalanceSheetAsync()
+    {
+        using var connection = _db.CreateConnection();
+        
+        var cashBranches = await connection.ExecuteScalarAsync<decimal>("SELECT COALESCE(SUM(AvailableFunds), 0) FROM Branches WHERE IsActive = TRUE");
+        var cashSessions = await connection.ExecuteScalarAsync<decimal>("SELECT COALESCE(SUM(OpeningBalance), 0) FROM CashRegisterSessions WHERE Status = 'OPEN'"); // Approximate active cash in registers not yet closed to branch
+        
+        var inventoryValue = await connection.ExecuteScalarAsync<decimal>("SELECT COALESCE(SUM(Stock * Cost), 0) FROM Products WHERE IsActive = TRUE");
+        
+        var accountsReceivable = await connection.ExecuteScalarAsync<decimal>("SELECT COALESCE(SUM(Balance), 0) FROM AccountsReceivable");
+        
+        var accountsPayable = await connection.ExecuteScalarAsync<decimal>("SELECT COALESCE(SUM(Balance), 0) FROM AccountsPayable");
+
+        return new BalanceSheetDto
+        {
+            CashAndEquivalents = cashBranches + cashSessions,
+            InventoryValue = inventoryValue,
+            AccountsReceivable = accountsReceivable,
+            AccountsPayable = accountsPayable
+        };
+    }
+
+    public async Task<IncomeStatementDto> GetIncomeStatementAsync(ReportFilterDto filter)
+    {
+        using var connection = _db.CreateConnection();
+        var filterSqlSales = " WHERE 1=1 ";
+        if (filter.StartDate.HasValue) filterSqlSales += " AND CreatedAt >= @StartDate ";
+        if (filter.EndDate.HasValue) filterSqlSales += " AND CreatedAt <= @EndDate ";
+
+        var filterSqlMoves = " WHERE IsActive = TRUE AND Type = 'OUT' ";
+        if (filter.StartDate.HasValue) filterSqlMoves += " AND Date >= @StartDate ";
+        if (filter.EndDate.HasValue) filterSqlMoves += " AND Date <= @EndDate ";
+
+        var revenue = await connection.ExecuteScalarAsync<decimal>($"SELECT COALESCE(SUM(Total), 0) FROM Sales {filterSqlSales}", filter);
+        
+        var cogsSql = $@"
+            SELECT COALESCE(SUM(sd.Quantity * p.Cost), 0)
+            FROM SaleDetails sd
+            JOIN Sales s ON sd.SaleId = s.Id
+            JOIN Products p ON sd.ProductId = p.Id
+            {filterSqlSales.Replace("CreatedAt", "s.CreatedAt")}";
+        var cogs = await connection.ExecuteScalarAsync<decimal>(cogsSql, filter);
+
+        var expenses = await connection.ExecuteScalarAsync<decimal>($"SELECT COALESCE(SUM(Amount), 0) FROM BranchMovements {filterSqlMoves}", filter);
+
+        return new IncomeStatementDto
+        {
+            Revenue = revenue,
+            CostOfGoodsSold = cogs,
+            OperatingExpenses = expenses
+        };
+    }
+
+    public async Task<IEnumerable<PurchaseReportDto>> GetPurchasesReportAsync(ReportFilterDto filter)
+    {
+        using var connection = _db.CreateConnection();
+        var sql = @"
+            SELECT 
+                p.Id as PurchaseId,
+                p.InvoiceNumber,
+                p.Date,
+                s.Name as SupplierName,
+                b.Name as BranchName,
+                u.FullName as UserName,
+                p.Total,
+                p.PaymentType,
+                p.Status
+            FROM Purchases p
+            JOIN Suppliers s ON p.SupplierId = s.Id
+            JOIN Users u ON p.UserId = u.Id
+            LEFT JOIN Branches b ON p.BranchId = b.Id
+            WHERE 1=1 ";
+
+        if (filter.StartDate.HasValue) sql += " AND p.Date >= @StartDate ";
+        if (filter.EndDate.HasValue) sql += " AND p.Date <= @EndDate ";
+        if (filter.BranchId.HasValue && filter.BranchId > 0) sql += " AND p.BranchId = @BranchId ";
+
+        sql += " ORDER BY p.Date DESC";
+
+        return await connection.QueryAsync<PurchaseReportDto>(sql, filter);
+    }
+
+    public async Task<IEnumerable<SalesAnalyticsDto>> GetSalesAnalyticsAsync(string groupBy, ReportFilterDto filter)
+    {
+        using var connection = _db.CreateConnection();
+        string periodSelector = groupBy?.ToLower() == "month" ? "TO_CHAR(CreatedAt, 'YYYY-MM')" : "TO_CHAR(CreatedAt, 'YYYY-MM-DD')";
+
+        var sql = $@"
+            SELECT 
+                {periodSelector} as GroupKey,
+                COALESCE(SUM(CASE WHEN PaymentType = 'CASH' THEN Total ELSE 0 END), 0) as CashSales,
+                COALESCE(SUM(CASE WHEN PaymentType = 'CREDIT' THEN Total ELSE 0 END), 0) as CreditSales
+            FROM Sales
+            WHERE 1=1 ";
+
+        if (filter.StartDate.HasValue) sql += " AND CreatedAt >= @StartDate ";
+        if (filter.EndDate.HasValue) sql += " AND CreatedAt <= @EndDate ";
+
+        sql += $@" GROUP BY {periodSelector} ORDER BY GroupKey ASC";
+
+        return await connection.QueryAsync<SalesAnalyticsDto>(sql, filter);
+    }
 }

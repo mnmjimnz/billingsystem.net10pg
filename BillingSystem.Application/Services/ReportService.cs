@@ -50,4 +50,24 @@ public class ReportService : IReportService
     {
         return await _repo.GetPagedKardexAsync(filter, search, page, pageSize);
     }
+    public async Task<IEnumerable<UserActivityDto>> GetUserActivityAsync(ReportFilterDto filter)
+    {
+        return await _repo.GetUserActivityAsync(filter);
+    }
+    public async Task<BalanceSheetDto> GetBalanceSheetAsync()
+    {
+        return await _repo.GetBalanceSheetAsync();
+    }
+    public async Task<IncomeStatementDto> GetIncomeStatementAsync(ReportFilterDto filter)
+    {
+        return await _repo.GetIncomeStatementAsync(filter);
+    }
+    public async Task<IEnumerable<PurchaseReportDto>> GetPurchasesReportAsync(ReportFilterDto filter)
+    {
+        return await _repo.GetPurchasesReportAsync(filter);
+    }
+    public async Task<IEnumerable<SalesAnalyticsDto>> GetSalesAnalyticsAsync(string groupBy, ReportFilterDto filter)
+    {
+        return await _repo.GetSalesAnalyticsAsync(groupBy, filter);
+    }
 }
