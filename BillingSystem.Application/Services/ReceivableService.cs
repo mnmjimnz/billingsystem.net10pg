@@ -12,14 +12,18 @@ public class ReceivableService : IReceivableService
     private readonly INotificationRepository _notificationRepo;
     private readonly INotificationService _notificationService;
 
+    private readonly ICashRegisterRepository _cashRepo;
+
     public ReceivableService(
         IReceivableRepository receivableRepo, 
         INotificationRepository notificationRepo,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ICashRegisterRepository cashRepo)
     {
         _receivableRepo = receivableRepo;
         _notificationRepo = notificationRepo;
         _notificationService = notificationService;
+        _cashRepo = cashRepo;
     }
 
     public async Task<IEnumerable<ReceivableDto>> GetReceivablesAsync()
@@ -43,6 +47,9 @@ public class ReceivableService : IReceivableService
 
     public async Task RegisterPaymentAsync(int id, int userId, decimal amount, string notes)
     {
+        var session = await _cashRepo.GetActiveSessionAsync(userId);
+        if (session == null) throw new Exception("Debe aperturar su caja antes de poder registrar abonos de clientes.");
+
         using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
         var account = await _receivableRepo.GetByIdAsync(id);

@@ -3,6 +3,7 @@ using BillingSystem.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Transactions;
 
 namespace BillingSystem.API.Controllers;
 
@@ -12,10 +13,12 @@ namespace BillingSystem.API.Controllers;
 public class PayablesController : ControllerBase
 {
     private readonly IPayableRepository _repo;
+    private readonly IBranchRepository _branchRepo;
 
-    public PayablesController(IPayableRepository repo)
+    public PayablesController(IPayableRepository repo, IBranchRepository branchRepo)
     {
         _repo = repo;
+        _branchRepo = branchRepo;
     }
 
     [HttpGet("pending")]
@@ -40,11 +43,28 @@ public class PayablesController : ControllerBase
         if (payment.Amount <= 0 || payment.Amount > account.Balance)
             return BadRequest("Monto inválido");
 
+        var branchIdStr = User.FindFirst("BranchId")?.Value;
+        if (string.IsNullOrEmpty(branchIdStr) || !int.TryParse(branchIdStr, out int userBranchId))
+            return BadRequest("Usuario no tiene sucursal asignada.");
+
+        var branch = await _branchRepo.GetByIdAsync(userBranchId);
+        if (branch == null) return BadRequest("Sucursal no encontrada.");
+
+        if (branch.AvailableFunds < payment.Amount)
+            return BadRequest(new { message = $"La sucursal no tiene fondos suficientes. Saldo disponible: ${branch.AvailableFunds:F2}" });
+
+        using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+
         payment.AccountId = id;
         payment.UserId = int.Parse(User.FindFirst("UserId")?.Value ?? "0");
 
         await _repo.AddPaymentAsync(payment);
         await _repo.UpdateAccountBalanceAsync(id, payment.Amount);
+
+        branch.AvailableFunds -= payment.Amount;
+        await _branchRepo.UpdateAsync(branch);
+
+        scope.Complete();
 
         return Ok(new { message = "Pago registrado exitosamente" });
     }
