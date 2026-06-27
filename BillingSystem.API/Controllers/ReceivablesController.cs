@@ -44,4 +44,11 @@ public class ReceivablesController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpGet("{id}/payments")]
+    public async Task<IActionResult> GetPayments(int id)
+    {
+        var payments = await _receivableService.GetPaymentsAsync(id);
+        return Ok(payments);
+    }
 }

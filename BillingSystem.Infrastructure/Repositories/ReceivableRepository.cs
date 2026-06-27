@@ -86,4 +86,11 @@ public class ReceivableRepository : IReceivableRepository
             PageSize = pageSize
         };
     }
+
+    public async Task<IEnumerable<ReceivablePayment>> GetPaymentsAsync(int accountId)
+    {
+        using var connection = _db.CreateConnection();
+        var sql = "SELECT * FROM ReceivablePayments WHERE AccountId = @AccountId ORDER BY PaymentDate DESC";
+        return await connection.QueryAsync<ReceivablePayment>(sql, new { AccountId = accountId });
+    }
 }

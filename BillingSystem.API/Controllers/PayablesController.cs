@@ -48,4 +48,14 @@ public class PayablesController : ControllerBase
 
         return Ok(new { message = "Pago registrado exitosamente" });
     }
+
+    [HttpGet("{id}/payments")]
+    public async Task<IActionResult> GetPayments(int id)
+    {
+        var account = await _repo.GetAccountByIdAsync(id);
+        if (account == null) return NotFound("Cuenta por pagar no encontrada");
+
+        var payments = await _repo.GetPaymentsAsync(id);
+        return Ok(payments);
+    }
 }

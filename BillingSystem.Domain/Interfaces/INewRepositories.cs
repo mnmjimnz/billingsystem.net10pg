@@ -17,6 +17,7 @@ public interface IReceivableRepository
     Task<int> CreateAsync(AccountsReceivable account);
     Task AddPaymentAsync(ReceivablePayment payment);
     Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize);
+    Task<IEnumerable<ReceivablePayment>> GetPaymentsAsync(int accountId);
 }
 
 public interface INotificationRepository

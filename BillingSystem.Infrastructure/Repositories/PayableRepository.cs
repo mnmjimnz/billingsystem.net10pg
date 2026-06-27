@@ -87,4 +87,11 @@ public class PayableRepository : IPayableRepository
             PageSize = pageSize
         };
     }
+
+    public async Task<IEnumerable<PayablePayment>> GetPaymentsAsync(int accountId)
+    {
+        using var connection = _db.CreateConnection();
+        var sql = "SELECT * FROM PayablePayments WHERE AccountId = @AccountId ORDER BY PaymentDate DESC";
+        return await connection.QueryAsync<PayablePayment>(sql, new { AccountId = accountId });
+    }
 }

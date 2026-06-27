@@ -79,4 +79,9 @@ public class ReceivableService : IReceivableService
     {
         return await _receivableRepo.GetPagedAsync(search, page, pageSize);
     }
+
+    public async Task<IEnumerable<ReceivablePayment>> GetPaymentsAsync(int accountId)
+    {
+        return await _receivableRepo.GetPaymentsAsync(accountId);
+    }
 }

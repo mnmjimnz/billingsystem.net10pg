@@ -13,6 +13,7 @@ public interface IReceivableService
     Task<IEnumerable<ReceivableDto>> GetReceivablesAsync();
     Task RegisterPaymentAsync(int id, int userId, decimal amount, string notes);
     Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize);
+    Task<IEnumerable<BillingSystem.Domain.Entities.ReceivablePayment>> GetPaymentsAsync(int accountId);
 }
 
 public interface INotificationService
