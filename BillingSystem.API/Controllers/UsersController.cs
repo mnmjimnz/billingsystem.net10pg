@@ -45,6 +45,11 @@ public class UsersController : ControllerBase
         {
             existing.PasswordHash = user.PasswordHash;
         }
+        existing.Salary = user.Salary;
+        existing.HireDate = user.HireDate;
+        existing.IsActive = user.IsActive;
+        existing.TerminationDate = user.TerminationDate;
+        existing.TerminationReason = user.TerminationReason;
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _repo.UpdateAsync(existing);
