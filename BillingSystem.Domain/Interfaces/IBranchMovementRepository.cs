@@ -1,0 +1,8 @@
+using BillingSystem.Domain.Entities;
+
+namespace BillingSystem.Domain.Interfaces;
+
+public interface IBranchMovementRepository : IRepository<BranchMovement>
+{
+    Task<IEnumerable<BranchMovement>> GetByBranchIdAsync(int branchId);
+}

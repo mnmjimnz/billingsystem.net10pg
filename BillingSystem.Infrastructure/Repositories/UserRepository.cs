@@ -30,15 +30,15 @@ public class UserRepository : IUserRepository
     public async Task<int> AddAsync(User entity)
     {
         using var connection = _connectionFactory.CreateConnection();
-        var sql = @"INSERT INTO Users (Username, PasswordHash, FullName, RoleId, BranchId, CreatedAt, IsActive) 
-                    VALUES (@Username, @PasswordHash, @FullName, @RoleId, @BranchId, @CreatedAt, @IsActive) RETURNING Id;";
+        var sql = @"INSERT INTO Users (Username, PasswordHash, FullName, RoleId, BranchId, CreatedAt, IsActive, Salary, HireDate, TerminationDate, TerminationReason) 
+                    VALUES (@Username, @PasswordHash, @FullName, @RoleId, @BranchId, @CreatedAt, @IsActive, @Salary, @HireDate, @TerminationDate, @TerminationReason) RETURNING Id;";
         return await connection.ExecuteScalarAsync<int>(sql, entity);
     }
 
     public async Task<int> UpdateAsync(User entity)
     {
         using var connection = _connectionFactory.CreateConnection();
-        var sql = @"UPDATE Users SET Username = @Username, FullName = @FullName, RoleId = @RoleId, BranchId = @BranchId, UpdatedAt = @UpdatedAt, IsActive = @IsActive WHERE Id = @Id;";
+        var sql = @"UPDATE Users SET Username = @Username, FullName = @FullName, RoleId = @RoleId, BranchId = @BranchId, UpdatedAt = @UpdatedAt, IsActive = @IsActive, Salary = @Salary, HireDate = @HireDate, TerminationDate = @TerminationDate, TerminationReason = @TerminationReason WHERE Id = @Id;";
         return await connection.ExecuteAsync(sql, entity);
     }
 

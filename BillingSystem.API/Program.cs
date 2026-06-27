@@ -42,6 +42,7 @@ builder.Services.AddScoped<IBranchRepository, BranchRepository>();
 builder.Services.AddScoped<IPayableRepository, PayableRepository>();
 builder.Services.AddScoped<ICashRegisterRepository, CashRegisterRepository>();
 builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
+builder.Services.AddScoped<IBranchMovementRepository, BranchMovementRepository>();
 
 // Dependency Injection - Application Services
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.ISaleService, BillingSystem.Application.Services.SaleService>();
@@ -51,6 +52,7 @@ builder.Services.AddScoped<BillingSystem.Application.Interfaces.IReceivableServi
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.INotificationService, BillingSystem.API.Services.NotificationService>();
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.IReportService, BillingSystem.Application.Services.ReportService>();
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.ICashRegisterService, BillingSystem.Application.Services.CashRegisterService>();
+builder.Services.AddScoped<BillingSystem.Application.Interfaces.IBranchMovementService, BillingSystem.Application.Services.BranchMovementService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

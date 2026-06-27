@@ -9,4 +9,8 @@ public class User : BaseEntity
     public Role? Role { get; set; }
     public int? BranchId { get; set; }
     public Branch? Branch { get; set; }
+    public decimal? Salary { get; set; }
+    public DateTime? HireDate { get; set; }
+    public DateTime? TerminationDate { get; set; }
+    public string? TerminationReason { get; set; }
 }
