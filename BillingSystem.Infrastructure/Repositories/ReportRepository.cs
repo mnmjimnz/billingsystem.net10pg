@@ -142,6 +142,19 @@ public class ReportRepository : IReportRepository
                     pp.Amount,
                     NULL as BranchId
                 FROM PayablePayments pp
+                
+                UNION ALL
+                
+                -- Movimientos Financieros Manuales (Inyecciones, Planillas, Servicios, etc.)
+                SELECT 
+                    bm.Date as Date,
+                    bm.Category || COALESCE(' - ' || bm.Description, '') as Description,
+                    bm.Type as Type,
+                    'BRANCH_MOVEMENT' as Category,
+                    bm.Amount as Amount,
+                    bm.BranchId as BranchId
+                FROM BranchMovements bm
+                WHERE bm.IsActive = TRUE
             )
             SELECT 
                 ce.*,
