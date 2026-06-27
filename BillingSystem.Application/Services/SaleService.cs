@@ -15,6 +15,7 @@ public class SaleService : ISaleService
     private readonly INotificationRepository _notificationRepo;
     private readonly INotificationService _notificationService;
     private readonly ICashRegisterRepository _cashRepo;
+    private readonly ISettingsRepository _settingsRepo;
 
     public SaleService(
         ISaleRepository saleRepo,
@@ -23,7 +24,8 @@ public class SaleService : ISaleService
         IReceivableRepository receivableRepo,
         INotificationRepository notificationRepo,
         INotificationService notificationService,
-        ICashRegisterRepository cashRepo)
+        ICashRegisterRepository cashRepo,
+        ISettingsRepository settingsRepo)
     {
         _saleRepo = saleRepo;
         _productRepo = productRepo;
@@ -32,12 +34,29 @@ public class SaleService : ISaleService
         _notificationRepo = notificationRepo;
         _notificationService = notificationService;
         _cashRepo = cashRepo;
+        _settingsRepo = settingsRepo;
     }
 
     public async Task<(int SaleId, string TicketNumber)> CreateSaleAsync(CreateSaleRequest request, int userId, int branchId)
     {
         var session = await _cashRepo.GetActiveSessionAsync(userId);
         if (session == null) throw new Exception("Debe aperturar su caja antes de poder realizar ventas.");
+
+        var settings = await _settingsRepo.GetSettingsAsync();
+        decimal taxPercentage = settings.TaxPercentage / 100m;
+        
+        // Calculate tax based on request details
+        decimal taxAmount = 0;
+        foreach (var detail in request.Details)
+        {
+            var p = await _productRepo.GetByIdAsync(detail.ProductId);
+            if (p != null && !p.IsTaxExempt)
+            {
+                // Assuming detail.Subtotal is the sum of items before tax.
+                // Tax is applied ON TOP of the subtotal for this item.
+                taxAmount += detail.Subtotal * taxPercentage;
+            }
+        }
 
         var sale = new Sale
         {
@@ -47,7 +66,8 @@ public class SaleService : ISaleService
             BranchId = branchId == 0 ? 1 : branchId,
             Subtotal = request.Subtotal,
             Discount = request.Discount,
-            Total = request.Total,
+            TaxAmount = taxAmount,
+            Total = request.Subtotal - request.Discount + taxAmount,
             PaymentType = request.PaymentType,
             AmountTendered = request.AmountTendered,
             Change = request.Change,

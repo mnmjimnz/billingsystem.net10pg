@@ -25,8 +25,8 @@ public class SaleRepository : ISaleRepository
     public async Task<int> CreateSaleWithDetailsAsync(Sale sale, IEnumerable<SaleDetail> details)
     {
         using var connection = _db.CreateConnection();
-        var saleSql = @"INSERT INTO Sales (TicketNumber, CustomerId, UserId, BranchId, Subtotal, Discount, Total, PaymentType, AmountTendered, Change, Status) 
-                        VALUES (@TicketNumber, @CustomerId, @UserId, @BranchId, @Subtotal, @Discount, @Total, @PaymentType, @AmountTendered, @Change, @Status) RETURNING Id;";
+        var saleSql = @"INSERT INTO Sales (TicketNumber, CustomerId, UserId, BranchId, Subtotal, Discount, TaxAmount, Total, PaymentType, AmountTendered, Change, Status) 
+                        VALUES (@TicketNumber, @CustomerId, @UserId, @BranchId, @Subtotal, @Discount, @TaxAmount, @Total, @PaymentType, @AmountTendered, @Change, @Status) RETURNING Id;";
         var saleId = await connection.ExecuteScalarAsync<int>(saleSql, sale);
 
         foreach(var detail in details) {

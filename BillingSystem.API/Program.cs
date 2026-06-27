@@ -41,6 +41,7 @@ builder.Services.AddScoped<IRoleRepository, RoleRepository>();
 builder.Services.AddScoped<IBranchRepository, BranchRepository>();
 builder.Services.AddScoped<IPayableRepository, PayableRepository>();
 builder.Services.AddScoped<ICashRegisterRepository, CashRegisterRepository>();
+builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
 
 // Dependency Injection - Application Services
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.ISaleService, BillingSystem.Application.Services.SaleService>();

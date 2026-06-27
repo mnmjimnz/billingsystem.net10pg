@@ -32,8 +32,8 @@ public class ProductRepository : IProductRepository
     public async Task<int> AddAsync(Product entity)
     {
         using var connection = _db.CreateConnection();
-        var sql = @"INSERT INTO Products (Name, Description, Barcode, CategoryId, Cost, Price, Stock, CreatedAt, IsActive) 
-                    VALUES (@Name, @Description, @Barcode, @CategoryId, @Cost, @Price, @Stock, @CreatedAt, @IsActive) RETURNING Id;";
+        var sql = @"INSERT INTO Products (Name, Description, Barcode, CategoryId, Cost, Price, Stock, IsTaxExempt, CreatedAt, IsActive) 
+                    VALUES (@Name, @Description, @Barcode, @CategoryId, @Cost, @Price, @Stock, @IsTaxExempt, @CreatedAt, @IsActive) RETURNING Id;";
         return await connection.ExecuteScalarAsync<int>(sql, entity);
     }
 
@@ -41,7 +41,7 @@ public class ProductRepository : IProductRepository
     {
         using var connection = _db.CreateConnection();
         var sql = @"UPDATE Products SET Name = @Name, Description = @Description, Barcode = @Barcode, 
-                    CategoryId = @CategoryId, Cost = @Cost, Price = @Price, Stock = @Stock,
+                    CategoryId = @CategoryId, Cost = @Cost, Price = @Price, Stock = @Stock, IsTaxExempt = @IsTaxExempt,
                     IsActive = @IsActive, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @Id;";
         return await connection.ExecuteAsync(sql, entity);
     }

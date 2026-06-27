@@ -12,6 +12,7 @@ public class Sale : BaseEntity
     public Branch? Branch { get; set; }
     public decimal Subtotal { get; set; }
     public decimal Discount { get; set; }
+    public decimal TaxAmount { get; set; }
     public decimal Total { get; set; }
     public string PaymentType { get; set; } = "CASH";
     public decimal AmountTendered { get; set; }
