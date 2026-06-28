@@ -38,8 +38,6 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
-    [HttpGet("barcode/{barcode}")]
-    
     [HttpGet("{id}/stock")]
     public async Task<IActionResult> GetStockByBranch(int id)
     {

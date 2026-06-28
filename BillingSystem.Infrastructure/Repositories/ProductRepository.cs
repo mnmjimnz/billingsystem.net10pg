@@ -83,6 +83,8 @@ public class ProductRepository : IProductRepository
             VALUES (@ProductId, @BranchId, @QuantityChange, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
             ON CONFLICT (ProductId, BranchId) 
             DO UPDATE SET Stock = ProductStocks.Stock + @QuantityChange, UpdatedAt = CURRENT_TIMESTAMP;
+
+            UPDATE Products SET Stock = Stock + @QuantityChange, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @ProductId;
         ";
         await connection.ExecuteAsync(sql, new { ProductId = productId, BranchId = branchId, QuantityChange = quantityChange });
     }
@@ -95,8 +97,8 @@ public class ProductRepository : IProductRepository
         try
         {
             // 1. Update Product global cost
-            var sql1 = "UPDATE Products SET Cost = @NewCost, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @Id";
-            await connection.ExecuteAsync(sql1, new { NewCost = newCost, Id = productId }, transaction);
+            var sql1 = "UPDATE Products SET Cost = @NewCost, Stock = Stock + @QuantityChange, UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @Id";
+            await connection.ExecuteAsync(sql1, new { NewCost = newCost, Id = productId, QuantityChange = quantityChange }, transaction);
             
             // 2. Update branch-specific stock
             var sql2 = @"
