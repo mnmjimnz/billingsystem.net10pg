@@ -32,6 +32,14 @@ public class PurchasesController : ControllerBase
         }
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var purchaseData = await _service.GetPurchaseWithDetailsAsync(id); // Wait, PurchaseService doesn't have it
+        if (purchaseData == null) return NotFound("Compra no encontrada");
+        return Ok(purchaseData);
+    }
+
     [HttpGet("paged")]
     public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {

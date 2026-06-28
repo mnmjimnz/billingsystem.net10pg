@@ -33,6 +33,34 @@ public class PurchaseRepository : IPurchaseRepository
         return purchaseId;
     }
 
+    public async Task<dynamic> GetPurchaseWithDetailsAsync(int id)
+    {
+        using var connection = _db.CreateConnection();
+        var purchaseSql = @"SELECT p.*, s.Name as SupplierName, u.FullName as UserName, b.Name as BranchName 
+                            FROM Purchases p 
+                            JOIN Suppliers s ON p.SupplierId = s.Id
+                            JOIN Users u ON p.UserId = u.Id
+                            JOIN Branches b ON p.BranchId = b.Id
+                            WHERE p.Id = @Id";
+        var purchase = await connection.QueryFirstOrDefaultAsync<dynamic>(purchaseSql, new { Id = id });
+
+        if (purchase != null)
+        {
+            var detailsSql = @"SELECT pd.*, pr.Name as ProductName, pr.Code as ProductCode 
+                               FROM PurchaseDetails pd
+                               JOIN Products pr ON pd.ProductId = pr.Id
+                               WHERE pd.PurchaseId = @Id";
+            var details = await connection.QueryAsync<dynamic>(detailsSql, new { Id = id });
+            
+            // Assigning details to a new dynamic object to return together
+            return new {
+                Purchase = purchase,
+                Details = details
+            };
+        }
+        return null;
+    }
+
     public Task<Purchase?> GetByIdAsync(int id) => throw new NotImplementedException();
     public Task<IEnumerable<Purchase>> GetAllAsync() => throw new NotImplementedException();
     public Task<int> AddAsync(Purchase entity) => throw new NotImplementedException();

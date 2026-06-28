@@ -122,6 +122,11 @@ public class PurchaseService : IPurchaseService
         return purchaseId;
     }
 
+    public async Task<dynamic> GetPurchaseWithDetailsAsync(int id)
+    {
+        return await _purchaseRepo.GetPurchaseWithDetailsAsync(id);
+    }
+
     public async Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize)
     {
         return await _purchaseRepo.GetPagedAsync(search, page, pageSize);
