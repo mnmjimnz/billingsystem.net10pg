@@ -20,9 +20,16 @@ public class PurchasesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(PurchaseDto dto)
     {
-        var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "1");
-        var id = await _service.CreatePurchaseAsync(dto, userId);
-        return Ok(new { id });
+        try 
+        {
+            var userId = int.Parse(User.FindFirst("UserId")?.Value ?? "1");
+            var id = await _service.CreatePurchaseAsync(dto, userId);
+            return Ok(new { success = true, id });
+        } 
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
     }
 
     [HttpGet("paged")]

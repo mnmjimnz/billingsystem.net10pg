@@ -25,6 +25,10 @@ RUN dotnet publish "BillingSystem.API.csproj" -c Release -o /app/publish /p:UseA
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 8080
+
+# Instalar dependencias necesarias para Microsoft.Data.SqlClient en Linux
+RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
+
 COPY --from=publish /app/publish .
 
 ENTRYPOINT ["dotnet", "BillingSystem.API.dll"]

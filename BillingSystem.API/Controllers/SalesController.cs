@@ -20,11 +20,18 @@ public class SalesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateSale([FromBody] CreateSaleRequest request)
     {
-        int.TryParse(User.FindFirst("UserId")?.Value, out int userId);
-        int.TryParse(User.FindFirst("BranchId")?.Value, out int branchId);
+        try
+        {
+            int.TryParse(User.FindFirst("UserId")?.Value, out int userId);
+            int.TryParse(User.FindFirst("BranchId")?.Value, out int branchId);
 
-        var result = await _saleService.CreateSaleAsync(request, userId, branchId);
-        
-        return Ok(new { message = "Venta procesada exitosamente", saleId = result.SaleId, ticketNumber = result.TicketNumber });
+            var result = await _saleService.CreateSaleAsync(request, userId, branchId);
+            
+            return Ok(new { success = true, message = "Venta procesada exitosamente", saleId = result.SaleId, ticketNumber = result.TicketNumber });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
     }
 }
