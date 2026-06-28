@@ -82,6 +82,18 @@ public class SaleService : ISaleService
 
         using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
+        
+        // Check stock availability BEFORE creating the sale
+        foreach (var detail in request.Details)
+        {
+            var product = await _productRepo.GetByIdAsync(detail.ProductId);
+            if (product == null) throw new Exception($"Producto con ID {detail.ProductId} no encontrado.");
+            
+            var branchStock = await _productRepo.GetStockForBranchAsync(detail.ProductId, branchId);
+            if (branchStock < detail.Quantity)
+                throw new Exception($"Existencias insuficientes para el producto '{product.Name}' en esta sucursal. Stock disponible: {branchStock}");
+        }
+
         // 1. Insert Sale & Details
         var saleId = await _saleRepo.CreateSaleWithDetailsAsync(sale, request.Details);
 
