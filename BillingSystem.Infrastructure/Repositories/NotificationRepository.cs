@@ -10,6 +10,13 @@ public class NotificationRepository : INotificationRepository
     private readonly DbConnectionFactory _db;
     public NotificationRepository(DbConnectionFactory db) => _db = db;
 
+    public async Task<IEnumerable<Notification>> GetAllAsync()
+    {
+        using var connection = _db.CreateConnection();
+        var sql = "SELECT * FROM Notifications ORDER BY CreatedAt DESC LIMIT 100";
+        return await connection.QueryAsync<Notification>(sql);
+    }
+
     public async Task<IEnumerable<Notification>> GetUnreadAsync()
     {
         using var connection = _db.CreateConnection();

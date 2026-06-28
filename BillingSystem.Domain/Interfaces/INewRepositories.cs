@@ -23,6 +23,7 @@ public interface IReceivableRepository
 public interface INotificationRepository
 {
     Task<IEnumerable<Notification>> GetUnreadAsync();
+    Task<IEnumerable<Notification>> GetAllAsync();
     Task MarkAsReadAsync(int id);
     Task MarkResolvedAsync(int referenceId, string type);
     Task AddAsync(Notification notification);

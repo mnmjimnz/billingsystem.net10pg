@@ -14,11 +14,13 @@ public class PayablesController : ControllerBase
 {
     private readonly IPayableRepository _repo;
     private readonly IBranchRepository _branchRepo;
+    private readonly INotificationRepository _notifRepo;
 
-    public PayablesController(IPayableRepository repo, IBranchRepository branchRepo)
+    public PayablesController(IPayableRepository repo, IBranchRepository branchRepo, INotificationRepository notifRepo)
     {
         _repo = repo;
         _branchRepo = branchRepo;
+        _notifRepo = notifRepo;
     }
 
     [HttpGet("pending")]
@@ -60,6 +62,11 @@ public class PayablesController : ControllerBase
 
         await _repo.AddPaymentAsync(payment);
         await _repo.UpdateAccountBalanceAsync(id, payment.Amount);
+
+        if (payment.Amount == account.Balance)
+        {
+            await _notifRepo.MarkResolvedAsync(account.PurchaseId, "WARNING");
+        }
 
         branch.AvailableFunds -= payment.Amount;
         await _branchRepo.UpdateAsync(branch);

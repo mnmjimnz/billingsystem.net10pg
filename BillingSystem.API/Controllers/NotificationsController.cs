@@ -17,6 +17,13 @@ public class NotificationsController : ControllerBase
         _notifRepo = notifRepo;
     }
 
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAll()
+    {
+        var notifications = await _notifRepo.GetAllAsync();
+        return Ok(notifications);
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetUnread()
     {
