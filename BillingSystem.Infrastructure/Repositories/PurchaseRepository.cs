@@ -46,7 +46,7 @@ public class PurchaseRepository : IPurchaseRepository
 
         if (purchase != null)
         {
-            var detailsSql = @"SELECT pd.*, pr.Name as ProductName, pr.Code as ProductCode 
+            var detailsSql = @"SELECT pd.*, pr.Name as ProductName, pr.Barcode as ProductCode 
                                FROM PurchaseDetails pd
                                JOIN Products pr ON pd.ProductId = pr.Id
                                WHERE pd.PurchaseId = @Id";
