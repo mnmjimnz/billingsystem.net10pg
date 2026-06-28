@@ -378,7 +378,7 @@ public class ReportRepository : IReportRepository
             SELECT 
                 p.Id as PurchaseId,
                 p.InvoiceNumber,
-                p.Date,
+                p.CreatedAt,
                 s.Name as SupplierName,
                 b.Name as BranchName,
                 u.FullName as UserName,
@@ -391,11 +391,11 @@ public class ReportRepository : IReportRepository
             LEFT JOIN Branches b ON p.BranchId = b.Id
             WHERE 1=1 ";
 
-        if (filter.StartDate.HasValue) sql += " AND p.Date >= @StartDate ";
-        if (filter.EndDate.HasValue) sql += " AND p.Date <= @EndDate ";
+        if (filter.StartDate.HasValue) sql += " AND p.CreatedAt >= @StartDate ";
+        if (filter.EndDate.HasValue) sql += " AND p.CreatedAt <= @EndDate ";
         if (filter.BranchId.HasValue && filter.BranchId > 0) sql += " AND p.BranchId = @BranchId ";
 
-        sql += " ORDER BY p.Date DESC";
+        sql += " ORDER BY p.CreatedAt DESC";
 
         return await connection.QueryAsync<PurchaseReportDto>(sql, filter);
     }
