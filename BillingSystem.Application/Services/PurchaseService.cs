@@ -61,8 +61,6 @@ public class PurchaseService : IPurchaseService
             Status = dto.PaymentType == "CREDIT" ? "PENDING" : "PAID"
         };
 
-        using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
-
         if (dto.AmountPaid > 0)
         {
             await _branchRepo.UpdateAsync(branch);
@@ -119,7 +117,6 @@ public class PurchaseService : IPurchaseService
             await _notificationService.DispatchNotificationAsync(notification.Title, notification.Message, notification.Type, purchaseId);
         }
 
-        scope.Complete();
         return purchaseId;
     }
 
