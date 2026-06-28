@@ -1,3 +1,4 @@
+using Dapper;
 using System.Text;
 using BillingSystem.Domain.Interfaces;
 using BillingSystem.Application.Interfaces;
@@ -43,6 +44,7 @@ builder.Services.AddScoped<IPayableRepository, PayableRepository>();
 builder.Services.AddScoped<ICashRegisterRepository, CashRegisterRepository>();
 builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
 builder.Services.AddScoped<IBranchMovementRepository, BranchMovementRepository>();
+builder.Services.AddScoped<IStockTransferRepository, StockTransferRepository>();
 
 // Dependency Injection - Application Services
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.ISaleService, BillingSystem.Application.Services.SaleService>();
@@ -53,6 +55,7 @@ builder.Services.AddScoped<BillingSystem.Application.Interfaces.INotificationSer
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.IReportService, BillingSystem.Application.Services.ReportService>();
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.ICashRegisterService, BillingSystem.Application.Services.CashRegisterService>();
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.IBranchMovementService, BillingSystem.Application.Services.BranchMovementService>();
+builder.Services.AddScoped<BillingSystem.Application.Interfaces.IStockTransferService, BillingSystem.Application.Services.StockTransferService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -84,5 +87,51 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapHub<BillingSystem.API.Hubs.NotificationHub>("/hubs/notifications");
+
+
+app.MapGet("/migrate-stocks", async (DbConnectionFactory factory) => {
+    try {
+        using var connection = factory.CreateConnection();
+        var sql = @"
+            CREATE TABLE IF NOT EXISTS ProductStocks (
+                Id SERIAL PRIMARY KEY,
+                ProductId INT NOT NULL REFERENCES Products(Id),
+                BranchId INT NOT NULL REFERENCES Branches(Id),
+                Stock INT NOT NULL DEFAULT 0,
+                CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UpdatedAt TIMESTAMP NULL,
+                UNIQUE(ProductId, BranchId)
+            );
+
+            ALTER TABLE InventoryMovements ADD COLUMN IF NOT EXISTS BranchId INT NULL REFERENCES Branches(Id);
+
+            CREATE TABLE IF NOT EXISTS StockTransfers (
+                Id SERIAL PRIMARY KEY,
+                ProductId INT NOT NULL REFERENCES Products(Id),
+                FromBranchId INT NOT NULL REFERENCES Branches(Id),
+                ToBranchId INT NOT NULL REFERENCES Branches(Id),
+                Quantity INT NOT NULL,
+                UserId INT NOT NULL REFERENCES Users(Id),
+                CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                Notes TEXT NULL
+            );
+
+            INSERT INTO ProductStocks (ProductId, BranchId, Stock, CreatedAt, UpdatedAt)
+            SELECT p.Id, (SELECT MIN(Id) FROM Branches), p.Stock, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
+            FROM Products p
+            WHERE NOT EXISTS (
+                SELECT 1 FROM ProductStocks ps WHERE ps.ProductId = p.Id
+            );
+
+            UPDATE InventoryMovements 
+            SET BranchId = (SELECT MIN(Id) FROM Branches) 
+            WHERE BranchId IS NULL;
+        ";
+        await Dapper.SqlMapper.ExecuteAsync(connection, sql);
+        return Results.Ok("Migration successful");
+    } catch (Exception ex) {
+        return Results.Problem(ex.ToString());
+    }
+});
 
 app.Run();

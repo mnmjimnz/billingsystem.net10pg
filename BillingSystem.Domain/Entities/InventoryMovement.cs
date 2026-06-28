@@ -3,6 +3,8 @@ namespace BillingSystem.Domain.Entities;
 public class InventoryMovement : BaseEntity
 {
     public int ProductId { get; set; }
+    public int? BranchId { get; set; }
+    public Branch? Branch { get; set; }
     public Product? Product { get; set; }
     public string MovementType { get; set; } = string.Empty; // "IN", "OUT"
     public string ReferenceType { get; set; } = string.Empty; // "SALE", "PURCHASE", "ADJUSTMENT"

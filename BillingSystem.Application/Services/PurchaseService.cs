@@ -75,7 +75,7 @@ public class PurchaseService : IPurchaseService
             var product = await _productRepo.GetByIdAsync(detail.ProductId);
             if (product != null)
             {
-                await _productRepo.UpdateStockAndCostAsync(detail.ProductId, detail.Quantity, detail.UnitCost);
+                await _productRepo.UpdateStockAndCostForBranchAsync(detail.ProductId, purchase.BranchId, detail.Quantity, detail.UnitCost);
 
                 var movement = new InventoryMovement
                 {
@@ -83,9 +83,10 @@ public class PurchaseService : IPurchaseService
                     MovementType = "IN",
                     ReferenceType = "PURCHASE",
                     ReferenceId = purchaseId,
+                    BranchId = purchase.BranchId,
                     Quantity = detail.Quantity,
-                    PreviousStock = product.Stock,
-                    NewStock = product.Stock + detail.Quantity,
+                    PreviousStock = await _productRepo.GetStockForBranchAsync(detail.ProductId, purchase.BranchId) - detail.Quantity,
+                    NewStock = await _productRepo.GetStockForBranchAsync(detail.ProductId, purchase.BranchId),
                     Description = $"Compra {purchase.InvoiceNumber}"
                 };
                 await _kardexRepo.AddMovementAsync(movement);

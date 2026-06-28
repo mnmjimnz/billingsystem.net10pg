@@ -98,15 +98,16 @@ public class SaleService : ISaleService
                     MovementType = "OUT",
                     ReferenceType = "SALE",
                     ReferenceId = saleId,
+                    BranchId = sale.BranchId,
                     Quantity = detail.Quantity,
-                    PreviousStock = product.Stock,
-                    NewStock = product.Stock - detail.Quantity,
+                    PreviousStock = await _productRepo.GetStockForBranchAsync(detail.ProductId, sale.BranchId) + detail.Quantity,
+                    NewStock = await _productRepo.GetStockForBranchAsync(detail.ProductId, sale.BranchId),
                     Description = "Venta desde POS"
                 };
                 await _kardexRepo.AddMovementAsync(movement);
 
                 // Update Stock
-                await _productRepo.UpdateStockAsync(detail.ProductId, -detail.Quantity);
+                await _productRepo.UpdateStockForBranchAsync(detail.ProductId, sale.BranchId, -detail.Quantity);
             }
         }
 
