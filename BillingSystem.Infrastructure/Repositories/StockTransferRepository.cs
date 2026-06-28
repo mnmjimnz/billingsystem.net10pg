@@ -29,7 +29,7 @@ public class StockTransferRepository : IStockTransferRepository
     {
         using var connection = _db.CreateConnection();
         var sql = @"
-            SELECT st.*, p.Name as ProductName, fb.Name as FromBranchName, tb.Name as ToBranchName, u.Name as UserName
+            SELECT st.*, p.Name as ProductName, fb.Name as FromBranchName, tb.Name as ToBranchName, u.FullName as UserName
             FROM StockTransfers st
             JOIN Products p ON st.ProductId = p.Id
             JOIN Branches fb ON st.FromBranchId = fb.Id
