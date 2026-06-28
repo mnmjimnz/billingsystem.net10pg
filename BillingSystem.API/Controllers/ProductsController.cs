@@ -39,6 +39,15 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("barcode/{barcode}")]
+    
+    [HttpGet("{id}/stock")]
+    public async Task<IActionResult> GetStockByBranch(int id)
+    {
+        var stock = await _productRepository.GetStockByBranchAsync(id);
+        return Ok(stock);
+    }
+
+    [HttpGet("barcode/{barcode}")]
     public async Task<IActionResult> GetByBarcode(string barcode)
     {
         var product = await _productRepository.GetByBarcodeAsync(barcode);
