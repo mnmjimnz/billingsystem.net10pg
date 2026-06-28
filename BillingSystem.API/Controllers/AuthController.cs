@@ -14,11 +14,13 @@ namespace BillingSystem.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IUserRepository _userRepository;
+    private readonly IRoleRepository _roleRepository;
     private readonly IConfiguration _configuration;
 
-    public AuthController(IUserRepository userRepository, IConfiguration configuration)
+    public AuthController(IUserRepository userRepository, IRoleRepository roleRepository, IConfiguration configuration)
     {
         _userRepository = userRepository;
+        _roleRepository = roleRepository;
         _configuration = configuration;
     }
 
@@ -34,7 +36,9 @@ public class AuthController : ControllerBase
         }
 
         var token = GenerateJwtToken(user);
-        return Ok(new { token, user = new { user.Id, user.Username, user.FullName, user.RoleId, user.BranchId } });
+        var perms = await _roleRepository.GetPermissionsByRoleIdAsync(user.RoleId);
+        var permissions = perms.Select(p => p.SystemName).ToList();
+        return Ok(new { token, user = new { user.Id, user.Username, user.FullName, user.RoleId, user.BranchId }, permissions });
     }
 
     private string GenerateJwtToken(User user)
@@ -63,5 +67,26 @@ public class AuthController : ControllerBase
         );
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    [HttpPost("seed-permissions")]
+    public async Task<IActionResult> SeedPermissions([FromServices] BillingSystem.Infrastructure.Data.DbConnectionFactory connectionFactory)
+    {
+        var sql = @"
+            INSERT INTO Permissions (SystemName, DisplayName, Module, Description) VALUES 
+            ('VIEW_REPORTS', 'Ver Reportes', 'Reportes', 'Permite acceder a los reportes contables'),
+            ('MANAGE_PAYABLES', 'Cuentas por Pagar', 'Pagos', 'Permite gestionar deudas a proveedores'),
+            ('MANAGE_BRANCHES', 'Gestionar Sucursales', 'Configuración', 'Permite crear y editar sucursales'),
+            ('MANAGE_SETTINGS', 'Configuraciones', 'Configuración', 'Permite modificar los ajustes de la empresa'),
+            ('MANAGE_MOVEMENTS', 'Movimientos de Sucursal', 'Inventario', 'Permite trasladar inventario entre sucursales')
+            ON CONFLICT (SystemName) DO NOTHING;
+
+            INSERT INTO RolePermissions (RoleId, PermissionId)
+            SELECT 1, Id FROM Permissions WHERE SystemName IN ('VIEW_REPORTS', 'MANAGE_PAYABLES', 'MANAGE_BRANCHES', 'MANAGE_SETTINGS', 'MANAGE_MOVEMENTS')
+            ON CONFLICT DO NOTHING;
+        ";
+        using var connection = connectionFactory.CreateConnection();
+        await Dapper.SqlMapper.ExecuteAsync(connection, sql);
+        return Ok(new { message = "Permissions seeded successfully" });
     }
 }
