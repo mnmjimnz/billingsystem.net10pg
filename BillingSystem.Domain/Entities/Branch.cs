@@ -7,4 +7,6 @@ public class Branch : BaseEntity
     public string Phone { get; set; } = string.Empty;
     public decimal AvailableFunds { get; set; } = 0;
     public string Status { get; set; } = "OPEN";
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
 }
