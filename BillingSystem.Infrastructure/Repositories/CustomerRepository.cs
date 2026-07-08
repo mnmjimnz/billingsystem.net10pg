@@ -5,7 +5,7 @@ using Dapper;
 
 namespace BillingSystem.Infrastructure.Repositories;
 
-public interface ICustomerRepository : IRepository<Customer> {}
+
 
 public class CustomerRepository : ICustomerRepository
 {
@@ -20,14 +20,19 @@ public class CustomerRepository : ICustomerRepository
         using var db = _conn.CreateConnection();
         return await db.QueryAsync<Customer>("SELECT * FROM Customers WHERE IsActive = TRUE");
     }
-    public async Task<int> AddAsync(Customer entity) {
+        public async Task<Customer?> GetByUsernameAsync(string username) {
         using var db = _conn.CreateConnection();
-        var sql = "INSERT INTO Customers (Name, DocumentNumber, Email, Phone, Address) VALUES (@Name, @DocumentNumber, @Email, @Phone, @Address) RETURNING Id;";
+        return await db.QueryFirstOrDefaultAsync<Customer>("SELECT * FROM Customers WHERE Username = @Username AND IsActive = TRUE;", new { Username = username });
+    }
+
+public async Task<int> AddAsync(Customer entity) {
+        using var db = _conn.CreateConnection();
+        var sql = "INSERT INTO Customers (Name, DocumentNumber, Email, Phone, Address, Username, PasswordHash, Latitude, Longitude) VALUES (@Name, @DocumentNumber, @Email, @Phone, @Address, @Username, @PasswordHash, @Latitude, @Longitude) RETURNING Id;";
         return await db.ExecuteScalarAsync<int>(sql, entity);
     }
     public async Task<int> UpdateAsync(Customer entity) {
         using var db = _conn.CreateConnection();
-        var sql = "UPDATE Customers SET Name=@Name, DocumentNumber=@DocumentNumber, Email=@Email, Phone=@Phone, Address=@Address, UpdatedAt=CURRENT_TIMESTAMP WHERE Id=@Id;";
+        var sql = "UPDATE Customers SET Name=@Name, DocumentNumber=@DocumentNumber, Email=@Email, Phone=@Phone, Address=@Address, Username=@Username, PasswordHash=@PasswordHash, Latitude=@Latitude, Longitude=@Longitude, UpdatedAt=CURRENT_TIMESTAMP WHERE Id=@Id;";
         return await db.ExecuteAsync(sql, entity);
     }
 

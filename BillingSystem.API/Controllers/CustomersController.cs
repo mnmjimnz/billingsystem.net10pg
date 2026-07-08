@@ -1,4 +1,5 @@
 using BillingSystem.Domain.Entities;
+using BillingSystem.Domain.Interfaces;
 using BillingSystem.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
