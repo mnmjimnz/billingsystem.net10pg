@@ -67,4 +67,38 @@ public class ProductsController : ControllerBase
         await _productRepository.UpdateAsync(product);
         return NoContent();
     }
+
+    [HttpPost("{id}/image")]
+    public async Task<IActionResult> UploadImage(int id, IFormFile file)
+    {
+        var product = await _productRepository.GetByIdAsync(id);
+        if (product == null) return NotFound();
+
+        if (file == null || file.Length == 0)
+            return BadRequest("No file uploaded");
+
+        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        if (!Directory.Exists(uploadsPath))
+        {
+            Directory.CreateDirectory(uploadsPath);
+        }
+
+        // Generate unique filename
+        var ext = Path.GetExtension(file.FileName);
+        var fileName = $"product_{id}_{Guid.NewGuid()}{ext}";
+        var filePath = Path.Combine(uploadsPath, fileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        // The URL path to serve the file
+        var fileUrl = $"/uploads/{fileName}";
+        
+        product.ImageUrl = fileUrl;
+        await _productRepository.UpdateAsync(product);
+
+        return Ok(new { ImageUrl = fileUrl });
+    }
 }

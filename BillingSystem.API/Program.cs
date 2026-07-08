@@ -83,6 +83,7 @@ builder.Services.AddSignalR();
 var app = builder.Build();
 
 app.UseCors("AllowAll");
+app.UseStaticFiles();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();

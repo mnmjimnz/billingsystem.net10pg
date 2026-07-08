@@ -37,8 +37,8 @@ public class ProductRepository : IProductRepository
     public async Task<int> AddAsync(Product entity)
     {
         using var connection = _db.CreateConnection();
-        var sql = @"INSERT INTO Products (Barcode, Name, Price, Cost, Stock, CategoryId, IsTaxExempt, CreatedAt, UpdatedAt)
-                    VALUES (@Barcode, @Name, @Price, @Cost, @Stock, @CategoryId, @IsTaxExempt, @CreatedAt, @UpdatedAt) RETURNING Id";
+        var sql = @"INSERT INTO Products (Barcode, Name, Price, Cost, Stock, CategoryId, IsTaxExempt, ImageUrl, CreatedAt, UpdatedAt)
+                    VALUES (@Barcode, @Name, @Price, @Cost, @Stock, @CategoryId, @IsTaxExempt, @ImageUrl, @CreatedAt, @UpdatedAt) RETURNING Id";
         return await connection.ExecuteScalarAsync<int>(sql, entity);
     }
 
@@ -47,7 +47,7 @@ public class ProductRepository : IProductRepository
         using var connection = _db.CreateConnection();
         var sql = @"UPDATE Products SET 
                     Barcode = @Barcode, Name = @Name, Price = @Price, Cost = @Cost, 
-                    Stock = @Stock, CategoryId = @CategoryId, IsTaxExempt = @IsTaxExempt, UpdatedAt = @UpdatedAt
+                    Stock = @Stock, CategoryId = @CategoryId, IsTaxExempt = @IsTaxExempt, ImageUrl = @ImageUrl, UpdatedAt = @UpdatedAt
                     WHERE Id = @Id";
         return await connection.ExecuteAsync(sql, entity);
     }
@@ -182,7 +182,8 @@ public class ProductRepository : IProductRepository
                 Cost = i.cost,
                 Stock = (int)i.calculatedtotalstock,
                 CategoryId = i.categoryid,
-                IsTaxExempt = i.istaxexempt
+                IsTaxExempt = i.istaxexempt,
+                ImageUrl = i.imageurl
             }),
             TotalCount = totalCount,
             Page = page,

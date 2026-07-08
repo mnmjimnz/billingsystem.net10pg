@@ -11,4 +11,5 @@ public class Product : BaseEntity
     public int CategoryId { get; set; }
     public Category? Category { get; set; }
     public bool IsTaxExempt { get; set; } = false;
+    public string? ImageUrl { get; set; }
 }
