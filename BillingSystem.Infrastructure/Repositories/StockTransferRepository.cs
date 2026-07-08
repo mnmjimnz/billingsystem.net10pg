@@ -52,7 +52,7 @@ public class StockTransferRepository : IStockTransferRepository
         );
     }
 
-    public async Task<BillingSystem.Domain.Models.PagedResult<StockTransfer>> GetPagedAsync(int page, int pageSize)
+        public async Task<BillingSystem.Domain.Models.PagedResult<StockTransfer>> GetPagedAsync(int page, int pageSize)
     {
         using var connection = _db.CreateConnection();
         var offset = (page - 1) * pageSize;
@@ -60,19 +60,27 @@ public class StockTransferRepository : IStockTransferRepository
         var countSql = "SELECT COUNT(*) FROM StockTransfers";
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
         
-        var dataSql = @"
-            SELECT st.*, 
-                   fb.Name as FromBranchName,
-                   tb.Name as ToBranchName,
-                   p.Name as ProductName
+        var sql = @"
+            SELECT st.*, p.Name, fb.Name, tb.Name, u.FullName
             FROM StockTransfers st
+            JOIN Products p ON st.ProductId = p.Id
             JOIN Branches fb ON st.FromBranchId = fb.Id
             JOIN Branches tb ON st.ToBranchId = tb.Id
-            JOIN Products p ON st.ProductId = p.Id
-            ORDER BY st.TransferDate DESC
+            JOIN Users u ON st.UserId = u.Id
+            ORDER BY st.CreatedAt DESC
             LIMIT @Limit OFFSET @Offset";
             
-        var items = await connection.QueryAsync<StockTransfer>(dataSql, new { Limit = pageSize, Offset = offset });
+        var items = await connection.QueryAsync<StockTransfer, Product, Branch, Branch, User, StockTransfer>(
+            sql,
+            (st, p, fb, tb, u) => 
+            {
+                st.Product = p;
+                st.FromBranch = fb;
+                st.ToBranch = tb;
+                st.User = u;
+                return st;
+            },
+            new { Limit = pageSize, Offset = offset });
         
         return new BillingSystem.Domain.Models.PagedResult<StockTransfer>
         {
