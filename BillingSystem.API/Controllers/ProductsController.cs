@@ -57,6 +57,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Create(Product product)
     {
         var id = await _productRepository.AddAsync(product);
+        product.Id = id;
         return CreatedAtAction(nameof(GetById), new { id = id }, product);
     }
 
@@ -64,6 +65,9 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Update(int id, Product product)
     {
         if (id != product.Id) return BadRequest();
+        var existing = await _productRepository.GetByIdAsync(id);
+        if (existing == null) return NotFound();
+        product.ImageUrl = existing.ImageUrl;
         await _productRepository.UpdateAsync(product);
         return NoContent();
     }
