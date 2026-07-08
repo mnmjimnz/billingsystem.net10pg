@@ -184,7 +184,9 @@ public class ProductRepository : IProductRepository
                 CategoryId = i.categoryid,
                 IsTaxExempt = i.istaxexempt
             }),
-            TotalCount = totalCount
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
         };
     }
 
