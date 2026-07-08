@@ -29,7 +29,7 @@ public class StockTransferRepository : IStockTransferRepository
     {
         using var connection = _db.CreateConnection();
         var sql = @"
-            SELECT st.*, p.Name, fb.Name, tb.Name, u.FullName
+            SELECT st.*, p.Id, p.Name, fb.Id, fb.Name, tb.Id, tb.Name, u.Id, u.FullName
             FROM StockTransfers st
             JOIN Products p ON st.ProductId = p.Id
             JOIN Branches fb ON st.FromBranchId = fb.Id
@@ -61,7 +61,7 @@ public class StockTransferRepository : IStockTransferRepository
         var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
         
         var sql = @"
-            SELECT st.*, p.Name, fb.Name, tb.Name, u.FullName
+            SELECT st.*, p.Id, p.Name, fb.Id, fb.Name, tb.Id, tb.Name, u.Id, u.FullName
             FROM StockTransfers st
             JOIN Products p ON st.ProductId = p.Id
             JOIN Branches fb ON st.FromBranchId = fb.Id
