@@ -49,4 +49,11 @@ public class BranchMovementsController : ControllerBase
 
         return BadRequest(new { message = result.Error });
     }
+
+    [HttpGet("branch/{branchId}/paged")]
+    public async Task<IActionResult> GetPagedByBranch(int branchId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var movements = await _movementService.GetPagedMovementsByBranchIdAsync(branchId, page, pageSize);
+        return Ok(movements);
+    }
 }

@@ -47,4 +47,11 @@ public class StockTransfersController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var transfers = await _transferService.GetPagedTransfersAsync(page, pageSize);
+        return Ok(transfers);
+    }
 }

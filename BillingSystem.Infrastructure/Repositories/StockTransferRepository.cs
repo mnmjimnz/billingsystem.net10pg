@@ -51,4 +51,35 @@ public class StockTransferRepository : IStockTransferRepository
             splitOn: "Name,Name,Name,FullName"
         );
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<StockTransfer>> GetPagedAsync(int page, int pageSize)
+    {
+        using var connection = _db.CreateConnection();
+        var offset = (page - 1) * pageSize;
+        
+        var countSql = "SELECT COUNT(*) FROM StockTransfers";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql);
+        
+        var dataSql = @"
+            SELECT st.*, 
+                   fb.Name as FromBranchName,
+                   tb.Name as ToBranchName,
+                   p.Name as ProductName
+            FROM StockTransfers st
+            JOIN Branches fb ON st.FromBranchId = fb.Id
+            JOIN Branches tb ON st.ToBranchId = tb.Id
+            JOIN Products p ON st.ProductId = p.Id
+            ORDER BY st.TransferDate DESC
+            LIMIT @Limit OFFSET @Offset";
+            
+        var items = await connection.QueryAsync<StockTransfer>(dataSql, new { Limit = pageSize, Offset = offset });
+        
+        return new BillingSystem.Domain.Models.PagedResult<StockTransfer>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
 }

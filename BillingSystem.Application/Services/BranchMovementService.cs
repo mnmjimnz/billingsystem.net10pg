@@ -78,4 +78,9 @@ public class BranchMovementService : IBranchMovementService
     {
         return await _movementRepository.GetByBranchIdAsync(branchId);
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<BranchMovement>> GetPagedMovementsByBranchIdAsync(int branchId, int page, int pageSize)
+    {
+        return await _movementRepository.GetPagedByBranchIdAsync(branchId, page, pageSize);
+    }
 }

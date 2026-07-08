@@ -81,4 +81,24 @@ public class BranchMovementRepository : IBranchMovementRepository
             PageSize = pageSize
         };
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<BranchMovement>> GetPagedByBranchIdAsync(int branchId, int page, int pageSize)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var offset = (page - 1) * pageSize;
+        
+        var countSql = "SELECT COUNT(*) FROM BranchMovements WHERE BranchId = @BranchId AND IsActive = TRUE";
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { BranchId = branchId });
+        
+        var dataSql = "SELECT * FROM BranchMovements WHERE BranchId = @BranchId AND IsActive = TRUE ORDER BY Date DESC LIMIT @Limit OFFSET @Offset";
+        var items = await connection.QueryAsync<BranchMovement>(dataSql, new { BranchId = branchId, Limit = pageSize, Offset = offset });
+        
+        return new BillingSystem.Domain.Models.PagedResult<BranchMovement>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            Page = page,
+            PageSize = pageSize
+        };
+    }
 }

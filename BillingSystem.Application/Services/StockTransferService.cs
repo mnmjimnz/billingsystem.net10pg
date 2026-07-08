@@ -73,4 +73,9 @@ public class StockTransferService : IStockTransferService
     {
         return await _transferRepo.GetAllTransfersAsync();
     }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<StockTransfer>> GetPagedTransfersAsync(int page, int pageSize)
+    {
+        return await _transferRepo.GetPagedAsync(page, pageSize);
+    }
 }
