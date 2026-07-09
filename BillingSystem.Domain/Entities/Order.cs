@@ -9,6 +9,7 @@ public class Order : BaseEntity
     public int BranchId { get; set; }
     public Branch? Branch { get; set; }
     public string Status { get; set; } = "PENDING";
+    public string PaymentMethod { get; set; } = "EFECTIVO";
     public string DeliveryAddress { get; set; } = string.Empty;
     public decimal Latitude { get; set; }
     public decimal Longitude { get; set; }

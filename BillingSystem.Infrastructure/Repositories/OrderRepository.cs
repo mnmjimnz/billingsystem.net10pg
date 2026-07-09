@@ -113,14 +113,14 @@ public class OrderRepository : IOrderRepository
         try
         {
             var orderSql = @"
-                INSERT INTO Orders (OrderNumber, Date, CustomerId, BranchId, Status, DeliveryAddress, Latitude, Longitude, Notes, Total, CreatedAt)
-                VALUES (@OrderNumber, @Date, @CustomerId, @BranchId, @Status, @DeliveryAddress, @Latitude, @Longitude, @Notes, @Total, CURRENT_TIMESTAMP)
+                INSERT INTO orders ("OrderNumber", "Date", "CustomerId", "BranchId", "Status", "DeliveryAddress", "Latitude", "Longitude", "Notes", "Total", "PaymentMethod", "CreatedAt")
+                VALUES (@OrderNumber, @Date, @CustomerId, @BranchId, @Status, @DeliveryAddress, @Latitude, @Longitude, @Notes, @Total, @PaymentMethod, CURRENT_TIMESTAMP)
                 RETURNING Id;
             ";
             int orderId = await connection.ExecuteScalarAsync<int>(orderSql, order, transaction);
 
             var detailSql = @"
-                INSERT INTO OrderDetails (OrderId, ProductId, Quantity, Price, Total, CreatedAt)
+                INSERT INTO orderdetails (OrderId, ProductId, Quantity, Price, Total, CreatedAt)
                 VALUES (@OrderId, @ProductId, @Quantity, @Price, @Total, CURRENT_TIMESTAMP);
             ";
             

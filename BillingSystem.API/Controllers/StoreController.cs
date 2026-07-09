@@ -69,6 +69,7 @@ public class StoreController : ControllerBase
         public decimal Longitude { get; set; }
         public string ReceiverName { get; set; } = string.Empty;
         public string Notes { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; } = "EFECTIVO";
     }
 
     public class StoreCartItem
@@ -105,6 +106,7 @@ public class StoreController : ControllerBase
             Longitude = request.Longitude,
             ReceiverName = request.ReceiverName,
             Notes = request.Notes,
+            PaymentMethod = request.PaymentMethod,
             Total = request.Items.Sum(i => i.Price * i.Quantity)
         };
 
@@ -119,7 +121,7 @@ public class StoreController : ControllerBase
             });
         }
 
-        var orderId = await _orderRepository.AddAsync(order);
+        var orderId = await _orderRepository.AddOrderAsync(order, order.Details);
         
         // Optionally update customer's last known location
         var customer = await _customerRepository.GetByIdAsync(customerId);
