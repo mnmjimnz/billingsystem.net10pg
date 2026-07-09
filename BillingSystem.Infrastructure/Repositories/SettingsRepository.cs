@@ -38,6 +38,12 @@ public class SettingsRepository : ISettingsRepository
                     Phone = @Phone,
                     Email = @Email,
                     TaxPercentage = @TaxPercentage,
+                    StoreTheme = @StoreTheme,
+                    ShowStoreSlider = @ShowStoreSlider,
+                    StoreProductsPerPage = @StoreProductsPerPage,
+                    SliderImage1 = @SliderImage1,
+                    SliderImage2 = @SliderImage2,
+                    SliderImage3 = @SliderImage3,
                     UpdatedAt = CURRENT_TIMESTAMP
                 WHERE Id = (SELECT Id FROM CompanySettings LIMIT 1);";
             await connection.ExecuteAsync(sql, settings);
@@ -45,8 +51,14 @@ public class SettingsRepository : ISettingsRepository
         else
         {
             var sql = @"
-                INSERT INTO CompanySettings (CompanyName, Address, Phone, Email, TaxPercentage, UpdatedAt)
-                VALUES (@CompanyName, @Address, @Phone, @Email, @TaxPercentage, CURRENT_TIMESTAMP);";
+                INSERT INTO CompanySettings (
+                    CompanyName, Address, Phone, Email, TaxPercentage, 
+                    StoreTheme, ShowStoreSlider, StoreProductsPerPage, 
+                    SliderImage1, SliderImage2, SliderImage3, UpdatedAt)
+                VALUES (
+                    @CompanyName, @Address, @Phone, @Email, @TaxPercentage, 
+                    @StoreTheme, @ShowStoreSlider, @StoreProductsPerPage, 
+                    @SliderImage1, @SliderImage2, @SliderImage3, CURRENT_TIMESTAMP);";
             await connection.ExecuteAsync(sql, settings);
         }
     }
