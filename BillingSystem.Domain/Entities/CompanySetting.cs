@@ -11,6 +11,7 @@ public class CompanySetting
     public string StoreTheme { get; set; } = "minimalist";
     public bool ShowStoreSlider { get; set; } = true;
     public int StoreProductsPerPage { get; set; } = 12;
+    public int? ActiveThemeId { get; set; }
     public string SliderImage1 { get; set; } = "https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?q=80&w=2070&auto=format&fit=crop";
     public string SliderImage2 { get; set; } = "https://images.unsplash.com/photo-1607082350899-7e105aa886ae?q=80&w=2070&auto=format&fit=crop";
     public string SliderImage3 { get; set; } = "https://images.unsplash.com/photo-1472851294608-062f824d29cc?q=80&w=2070&auto=format&fit=crop";

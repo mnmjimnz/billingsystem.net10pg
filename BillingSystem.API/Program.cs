@@ -1,8 +1,10 @@
 using Dapper;
 using System.Text;
+using System.Text.Json.Serialization;
 using BillingSystem.Domain.Interfaces;
 using BillingSystem.Application.Interfaces;
 using BillingSystem.Infrastructure.Data;
+using BillingSystem.Domain.Repositories;
 using BillingSystem.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -46,6 +48,8 @@ builder.Services.AddScoped<ISettingsRepository, SettingsRepository>();
 builder.Services.AddScoped<IBranchMovementRepository, BranchMovementRepository>();
 builder.Services.AddScoped<IStockTransferRepository, StockTransferRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IThemeRepository, ThemeRepository>();
+builder.Services.AddScoped<IThemeSettingRepository, ThemeSettingRepository>();
 
 // Dependency Injection - Application Services
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.ISaleService, BillingSystem.Application.Services.SaleService>();
