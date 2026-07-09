@@ -213,8 +213,8 @@ public class OrderRepository : IOrderRepository
                 }, transaction);
 
                 var saleDetailSql = @"
-                    INSERT INTO SaleDetails (SaleId, ProductId, Quantity, Price, Discount, Total, CreatedAt)
-                    VALUES (@SaleId, @ProductId, @Quantity, @Price, 0, @Total, CURRENT_TIMESTAMP);
+                    INSERT INTO SaleDetails (SaleId, ProductId, Quantity, UnitPrice, Subtotal, CreatedAt)
+                    VALUES (@SaleId, @ProductId, @Quantity, @Price, @Total, CURRENT_TIMESTAMP);
                 ";
                 foreach (var d in details)
                 {
