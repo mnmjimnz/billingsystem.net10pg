@@ -28,15 +28,26 @@ public class SettingsRepository : ISettingsRepository
     public async Task UpdateSettingsAsync(CompanySetting settings)
     {
         using var connection = _db.CreateConnection();
-        var sql = @"
-            UPDATE CompanySettings 
-            SET CompanyName = @CompanyName,
-                Address = @Address,
-                Phone = @Phone,
-                Email = @Email,
-                TaxPercentage = @TaxPercentage,
-                UpdatedAt = CURRENT_TIMESTAMP
-            WHERE Id = (SELECT Id FROM CompanySettings LIMIT 1);";
-        await connection.ExecuteAsync(sql, settings);
+        var exists = await connection.ExecuteScalarAsync<bool>("SELECT EXISTS(SELECT 1 FROM CompanySettings)");
+        if (exists)
+        {
+            var sql = @"
+                UPDATE CompanySettings 
+                SET CompanyName = @CompanyName,
+                    Address = @Address,
+                    Phone = @Phone,
+                    Email = @Email,
+                    TaxPercentage = @TaxPercentage,
+                    UpdatedAt = CURRENT_TIMESTAMP
+                WHERE Id = (SELECT Id FROM CompanySettings LIMIT 1);";
+            await connection.ExecuteAsync(sql, settings);
+        }
+        else
+        {
+            var sql = @"
+                INSERT INTO CompanySettings (CompanyName, Address, Phone, Email, TaxPercentage, UpdatedAt)
+                VALUES (@CompanyName, @Address, @Phone, @Email, @TaxPercentage, CURRENT_TIMESTAMP);";
+            await connection.ExecuteAsync(sql, settings);
+        }
     }
 }
