@@ -9,4 +9,5 @@ public interface IOrderRepository : IRepository<Order>
     Task<dynamic?> GetOrderWithDetailsAsync(int id);
     Task<int> AddOrderAsync(Order order, List<OrderDetail> details);
     Task<bool> UpdateOrderStatusAsync(int orderId, string status, int userId, string? receiverName = null);
+    Task<IEnumerable<Order>> GetByCustomerIdAsync(int customerId);
 }

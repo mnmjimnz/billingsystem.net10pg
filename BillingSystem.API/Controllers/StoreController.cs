@@ -135,4 +135,19 @@ public class StoreController : ControllerBase
 
         return Ok(new { message = "Pedido realizado con éxito", orderId = orderId });
     }
+
+    [HttpGet("orders")]
+    [Authorize]
+    public async Task<IActionResult> GetMyOrders()
+    {
+        var email = User.Identity?.Name;
+        if (string.IsNullOrEmpty(email)) return Unauthorized();
+
+        var customer = await _customerRepository.GetByUsernameAsync(email);
+        if (customer == null) return Unauthorized();
+
+        var orders = await _orderRepository.GetByCustomerIdAsync(customer.Id);
+        return Ok(orders);
+    }
+
 }

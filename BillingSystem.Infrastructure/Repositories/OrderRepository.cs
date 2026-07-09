@@ -104,6 +104,28 @@ public class OrderRepository : IOrderRepository
         return null;
     }
 
+    
+    public async Task<IEnumerable<Order>> GetByCustomerIdAsync(int customerId)
+    {
+        using var connection = _db.CreateConnection();
+        var sql = @"
+            SELECT * FROM orders WHERE CustomerId = @CustomerId ORDER BY CreatedAt DESC;
+        ";
+        var orders = await connection.QueryAsync<Order>(sql, new { CustomerId = customerId });
+        
+        foreach(var order in orders)
+        {
+            var detailSql = @"
+                SELECT od.*, p.Name as ProductName 
+                FROM orderdetails od
+                JOIN products p ON od.ProductId = p.Id
+                WHERE od.OrderId = @OrderId;
+            ";
+            order.Details = (await connection.QueryAsync<OrderDetail>(detailSql, new { OrderId = order.Id })).ToList();
+        }
+        return orders;
+    }
+
     public async Task<int> AddOrderAsync(Order order, List<OrderDetail> details)
     {
         using var connection = _db.CreateConnection();
