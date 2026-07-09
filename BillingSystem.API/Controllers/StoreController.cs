@@ -14,17 +14,23 @@ public class StoreController : ControllerBase
     private readonly ICategoryRepository _categoryRepository;
     private readonly IOrderRepository _orderRepository;
     private readonly ICustomerRepository _customerRepository;
+    private readonly INotificationRepository _notifRepo;
+    private readonly BillingSystem.Application.Interfaces.INotificationService _notifService;
 
     public StoreController(
         IProductRepository productRepository, 
         ICategoryRepository categoryRepository, 
         IOrderRepository orderRepository,
-        ICustomerRepository customerRepository)
+        ICustomerRepository customerRepository,
+        INotificationRepository notifRepo,
+        BillingSystem.Application.Interfaces.INotificationService notifService)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
+        _notifRepo = notifRepo;
+        _notifService = notifService;
     }
 
     [HttpGet("products")]
@@ -132,6 +138,16 @@ public class StoreController : ControllerBase
             customer.Address = request.DeliveryAddress;
             await _customerRepository.UpdateAsync(customer);
         }
+
+        // Generate Notification
+        var notif = new Notification {
+            Title = "Nuevo Pedido en Línea",
+            Message = $"Pedido {order.OrderNumber} recibido",
+            Type = "ORDER",
+            ReferenceId = orderId
+        };
+        await _notifRepo.AddAsync(notif);
+        await _notifService.DispatchNotificationAsync(notif.Title, notif.Message, notif.Type, orderId);
 
         return Ok(new { message = "Pedido realizado con éxito", orderId = orderId });
     }
