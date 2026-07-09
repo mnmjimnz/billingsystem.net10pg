@@ -113,7 +113,7 @@ public class OrderRepository : IOrderRepository
         try
         {
             var orderSql = @"
-                INSERT INTO orders ("OrderNumber", "Date", "CustomerId", "BranchId", "Status", "DeliveryAddress", "Latitude", "Longitude", "Notes", "Total", "PaymentMethod", "CreatedAt")
+                INSERT INTO orders (OrderNumber, Date, CustomerId, BranchId, Status, DeliveryAddress, Latitude, Longitude, Notes, Total, PaymentMethod, CreatedAt)
                 VALUES (@OrderNumber, @Date, @CustomerId, @BranchId, @Status, @DeliveryAddress, @Latitude, @Longitude, @Notes, @Total, @PaymentMethod, CURRENT_TIMESTAMP)
                 RETURNING Id;
             ";
