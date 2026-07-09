@@ -156,13 +156,13 @@ public class StoreController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetMyOrders()
     {
-        var email = User.Identity?.Name;
-        if (string.IsNullOrEmpty(email)) return Unauthorized();
+        var customerIdClaim = User.FindFirst("CustomerId")?.Value;
+        if (string.IsNullOrEmpty(customerIdClaim) || !int.TryParse(customerIdClaim, out int customerId))
+        {
+            return Unauthorized(new { message = "Token inválido o expirado." });
+        }
 
-        var customer = await _customerRepository.GetByUsernameAsync(email);
-        if (customer == null) return Unauthorized();
-
-        var orders = await _orderRepository.GetByCustomerIdAsync(customer.Id);
+        var orders = await _orderRepository.GetByCustomerIdAsync(customerId);
         return Ok(orders);
     }
 
