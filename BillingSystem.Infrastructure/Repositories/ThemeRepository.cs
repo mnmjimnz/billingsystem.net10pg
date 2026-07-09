@@ -57,7 +57,7 @@ public class ThemeRepository : IThemeRepository
             UPDATE ""Themes"" SET ""IsActive"" = false;
             UPDATE ""Themes"" SET ""IsActive"" = true WHERE ""Id"" = @Id;
             UPDATE companysettings SET ""ActiveThemeId"" = @Id;
-            UPDATE companysettings SET ""StoreTheme"" = (SELECT ""Code"" FROM ""Themes"" WHERE ""Id"" = @Id);
+            UPDATE companysettings SET storetheme = (SELECT ""Code"" FROM ""Themes"" WHERE ""Id"" = @Id);
         ", new { Id = themeId });
     }
 }
