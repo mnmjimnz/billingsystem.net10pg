@@ -8,7 +8,7 @@ namespace BillingSystem.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin,Manager")]
+[Authorize(Roles = "1,2,3")]
 public class CouponsController : ControllerBase
 {
     private readonly ICouponRepository _couponRepository;

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,Manager,Dispatcher")]
+[Authorize(Roles = "1,2,3")]
 public class DeliveryController : ControllerBase
 {
     private readonly IVehicleRepository _vehicleRepo;
