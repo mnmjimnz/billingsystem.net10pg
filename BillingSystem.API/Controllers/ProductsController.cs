@@ -101,6 +101,7 @@ public class ProductsController : ControllerBase
         {
             File = new CloudinaryDotNet.FileDescription(file.FileName, stream),
             PublicId = $"product_{id}_{Guid.NewGuid()}",
+            Folder = "products",
             Overwrite = true
         };
 
