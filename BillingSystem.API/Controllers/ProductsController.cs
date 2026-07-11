@@ -88,6 +88,11 @@ public class ProductsController : ControllerBase
             return StatusCode(500, new { message = "Cloudinary environment variable is not configured on the server." });
         }
 
+        if (cloudinaryUrl.StartsWith("CLOUDINARY_URL="))
+        {
+            cloudinaryUrl = cloudinaryUrl.Substring("CLOUDINARY_URL=".Length);
+        }
+
         var cloudinary = new CloudinaryDotNet.Cloudinary(cloudinaryUrl);
         cloudinary.Api.Secure = true;
 
