@@ -44,7 +44,7 @@ public class DeliveryController : ControllerBase
     {
         v.Id = id;
         await _vehicleRepo.UpdateAsync(v);
-        return Ok();
+        return NoContent();
     }
 
     [HttpGet("drivers")]
@@ -66,7 +66,7 @@ public class DeliveryController : ControllerBase
     {
         d.Id = id;
         await _driverRepo.UpdateAsync(d);
-        return Ok();
+        return NoContent();
     }
 
     [HttpGet("routes")]
@@ -96,6 +96,6 @@ public class DeliveryController : ControllerBase
     {
         r.Id = id;
         await _routeRepo.UpdateAsync(r);
-        return Ok();
+        return NoContent();
     }
 }
