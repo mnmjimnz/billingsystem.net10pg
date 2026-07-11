@@ -73,32 +73,40 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost("{id}/image")]
+    [Authorize]
     public async Task<IActionResult> UploadImage(int id, IFormFile file)
     {
         var product = await _productRepository.GetByIdAsync(id);
         if (product == null) return NotFound();
 
         if (file == null || file.Length == 0)
-            return BadRequest("No file uploaded");
+            return BadRequest(new { message = "No file uploaded" });
 
-        var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-        if (!Directory.Exists(uploadsPath))
+        var cloudinaryUrl = Environment.GetEnvironmentVariable("CLOUDINARY_URL");
+        if (string.IsNullOrEmpty(cloudinaryUrl))
         {
-            Directory.CreateDirectory(uploadsPath);
+            return StatusCode(500, new { message = "Cloudinary environment variable is not configured on the server." });
         }
 
-        // Generate unique filename
-        var ext = Path.GetExtension(file.FileName);
-        var fileName = $"product_{id}_{Guid.NewGuid()}{ext}";
-        var filePath = Path.Combine(uploadsPath, fileName);
+        var cloudinary = new CloudinaryDotNet.Cloudinary(cloudinaryUrl);
+        cloudinary.Api.Secure = true;
 
-        using (var stream = new FileStream(filePath, FileMode.Create))
+        using var stream = file.OpenReadStream();
+        var uploadParams = new CloudinaryDotNet.Actions.ImageUploadParams()
         {
-            await file.CopyToAsync(stream);
+            File = new CloudinaryDotNet.FileDescription(file.FileName, stream),
+            PublicId = $"product_{id}_{Guid.NewGuid()}",
+            Overwrite = true
+        };
+
+        var uploadResult = await cloudinary.UploadAsync(uploadParams);
+
+        if (uploadResult.Error != null)
+        {
+            return StatusCode(500, new { message = uploadResult.Error.Message });
         }
 
-        // The URL path to serve the file
-        var fileUrl = $"/uploads/{fileName}";
+        var fileUrl = uploadResult.SecureUrl.ToString();
         
         product.ImageUrl = fileUrl;
         await _productRepository.UpdateAsync(product);
