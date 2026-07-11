@@ -117,7 +117,7 @@ public class DeliveryRouteRepository : IDeliveryRouteRepository
     public async Task<int> AddAsync(DeliveryRoute entity)
     {
         using var connection = _db.CreateConnection();
-        var sql = "INSERT INTO delivery_routes (Date, DriverId, VehicleId, Status, CreatedAt) VALUES (@Date, @DriverId, @VehicleId, @Status, CURRENT_TIMESTAMP) RETURNING Id;";
+        var sql = "INSERT INTO delivery_routes (Date, DriverId, VehicleId, BranchId, Status, CreatedAt) VALUES (@Date, @DriverId, @VehicleId, @BranchId, @Status, CURRENT_TIMESTAMP) RETURNING Id;";
         var id = await connection.ExecuteScalarAsync<int>(sql, entity);
         
         foreach (var stop in entity.Stops)
@@ -131,7 +131,7 @@ public class DeliveryRouteRepository : IDeliveryRouteRepository
     public async Task<int> UpdateAsync(DeliveryRoute entity)
     {
         using var connection = _db.CreateConnection();
-        var sql = "UPDATE delivery_routes SET Date = @Date, DriverId = @DriverId, VehicleId = @VehicleId, Status = @Status WHERE Id = @Id;";
+        var sql = "UPDATE delivery_routes SET Date = @Date, DriverId = @DriverId, VehicleId = @VehicleId, BranchId = @BranchId, Status = @Status WHERE Id = @Id;";
         var res = await connection.ExecuteAsync(sql, entity);
         
         // Simplified stop update: Delete all and reinsert (in a real scenario we'd diff them)

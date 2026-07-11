@@ -23,6 +23,8 @@ public class DeliveryRoute : BaseEntity
     public Driver? Driver { get; set; }
     public int VehicleId { get; set; }
     public Vehicle? Vehicle { get; set; }
+    public int BranchId { get; set; } = 1;
+    public Branch? Branch { get; set; }
     public string Status { get; set; } = "PENDING";
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     
