@@ -16,6 +16,7 @@ public class StoreController : ControllerBase
     private readonly ICustomerRepository _customerRepository;
     private readonly INotificationRepository _notifRepo;
     private readonly BillingSystem.Application.Interfaces.INotificationService _notifService;
+    private readonly ICouponRepository _couponRepository;
 
     public StoreController(
         IProductRepository productRepository, 
@@ -23,7 +24,8 @@ public class StoreController : ControllerBase
         IOrderRepository orderRepository,
         ICustomerRepository customerRepository,
         INotificationRepository notifRepo,
-        BillingSystem.Application.Interfaces.INotificationService notifService)
+        BillingSystem.Application.Interfaces.INotificationService notifService,
+        ICouponRepository couponRepository)
     {
         _productRepository = productRepository;
         _categoryRepository = categoryRepository;
@@ -31,6 +33,7 @@ public class StoreController : ControllerBase
         _customerRepository = customerRepository;
         _notifRepo = notifRepo;
         _notifService = notifService;
+        _couponRepository = couponRepository;
     }
 
     [HttpGet("products")]
@@ -76,6 +79,7 @@ public class StoreController : ControllerBase
         public string ReceiverName { get; set; } = string.Empty;
         public string Notes { get; set; } = string.Empty;
         public string PaymentMethod { get; set; } = "EFECTIVO";
+        public string? CouponCode { get; set; }
     }
 
     public class StoreCartItem
@@ -100,6 +104,32 @@ public class StoreController : ControllerBase
             return BadRequest(new { message = "El carrito está vacío." });
         }
 
+        decimal subtotal = request.Items.Sum(i => i.Price * i.Quantity);
+        decimal discountAmount = 0;
+
+        if (!string.IsNullOrEmpty(request.CouponCode))
+        {
+            var coupon = await _couponRepository.GetByCodeAsync(request.CouponCode.ToUpperInvariant());
+            if (coupon != null && coupon.IsActive && 
+                (!coupon.ValidFrom.HasValue || coupon.ValidFrom <= DateTime.Now) &&
+                (!coupon.ValidUntil.HasValue || coupon.ValidUntil >= DateTime.Now) &&
+                (!coupon.MaxUses.HasValue || coupon.CurrentUses < coupon.MaxUses))
+            {
+                if (coupon.DiscountPercentage.HasValue)
+                {
+                    discountAmount = subtotal * (coupon.DiscountPercentage.Value / 100);
+                }
+                else if (coupon.DiscountAmount.HasValue)
+                {
+                    discountAmount = coupon.DiscountAmount.Value;
+                }
+                
+                // Increment use count
+                coupon.CurrentUses++;
+                await _couponRepository.UpdateAsync(coupon);
+            }
+        }
+
         var order = new Order
         {
             OrderNumber = $"ONL-{DateTime.Now:yyyyMMddHHmmss}-{new Random().Next(100, 999)}",
@@ -113,7 +143,7 @@ public class StoreController : ControllerBase
             ReceiverName = request.ReceiverName,
             Notes = request.Notes,
             PaymentMethod = request.PaymentMethod,
-            Total = request.Items.Sum(i => i.Price * i.Quantity)
+            Total = Math.Max(0, subtotal - discountAmount)
         };
 
         foreach (var item in request.Items)
@@ -150,6 +180,29 @@ public class StoreController : ControllerBase
         await _notifService.DispatchNotificationAsync(notif.Title, notif.Message, notif.Type, orderId);
 
         return Ok(new { message = "Pedido realizado con éxito", orderId = orderId });
+    }
+
+    [HttpGet("validate-coupon/{code}")]
+    public async Task<IActionResult> ValidateCoupon(string code)
+    {
+        var coupon = await _couponRepository.GetByCodeAsync(code.ToUpperInvariant());
+        if (coupon == null || !coupon.IsActive) 
+            return BadRequest(new { message = "Cupón inválido o inactivo." });
+            
+        if (coupon.ValidFrom.HasValue && coupon.ValidFrom > DateTime.Now)
+            return BadRequest(new { message = "Este cupón aún no es válido." });
+            
+        if (coupon.ValidUntil.HasValue && coupon.ValidUntil < DateTime.Now)
+            return BadRequest(new { message = "Este cupón ha expirado." });
+            
+        if (coupon.MaxUses.HasValue && coupon.CurrentUses >= coupon.MaxUses)
+            return BadRequest(new { message = "Este cupón ha superado su límite de usos." });
+
+        return Ok(new { 
+            code = coupon.Code, 
+            discountPercentage = coupon.DiscountPercentage, 
+            discountAmount = coupon.DiscountAmount 
+        });
     }
 
     [HttpGet("orders")]
