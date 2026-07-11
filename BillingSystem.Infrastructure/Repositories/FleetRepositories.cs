@@ -101,7 +101,13 @@ public class DeliveryRouteRepository : IDeliveryRouteRepository
     public async Task<IEnumerable<DeliveryRoute>> GetAllAsync()
     {
         using var connection = _db.CreateConnection();
-        return await connection.QueryAsync<DeliveryRoute>("SELECT * FROM delivery_routes ORDER BY Date DESC;");
+        var routes = (await connection.QueryAsync<DeliveryRoute>("SELECT * FROM delivery_routes ORDER BY Date DESC;")).ToList();
+        var allStops = (await connection.QueryAsync<RouteStop>("SELECT * FROM route_stops;")).ToList();
+        foreach (var route in routes)
+        {
+            route.Stops = allStops.Where(s => s.DeliveryRouteId == route.Id).OrderBy(s => s.StopOrder).ToList();
+        }
+        return routes;
     }
     public async Task<IEnumerable<DeliveryRoute>> GetByStatusAsync(string status)
     {
