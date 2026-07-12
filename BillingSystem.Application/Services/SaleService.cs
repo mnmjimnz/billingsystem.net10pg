@@ -174,10 +174,12 @@ public class SaleService : ISaleService
             }
         }
 
+        scope.Complete();
+        
         // 4. Registrar en contabilidad (Póliza contable de venta)
+        // Se ejecuta fuera del TransactionScope para evitar el error de transacciones anidadas
         await _accountingService.RecordPosSaleAsync(sale, totalCostOfGoodsSold);
 
-        scope.Complete();
         return (saleId, sale.TicketNumber);
     }
 }
