@@ -13,4 +13,9 @@ public class User : BaseEntity
     public DateTime? HireDate { get; set; }
     public DateTime? TerminationDate { get; set; }
     public string? TerminationReason { get; set; }
+    
+    // HR Fields
+    public string? JobTitle { get; set; }
+    public string? DocumentId { get; set; } // DPI/Cedula/SSN
+    public decimal? BaseBonus { get; set; }
 }

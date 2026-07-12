@@ -54,6 +54,7 @@ builder.Services.AddScoped<IStockTransferRepository, StockTransferRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IThemeRepository, ThemeRepository>();
 builder.Services.AddScoped<IThemeSettingRepository, ThemeSettingRepository>();
+builder.Services.AddScoped<BillingSystem.Domain.Interfaces.IHrRepository, BillingSystem.Infrastructure.Repositories.HrRepository>();
 
 // Dependency Injection - Application Services
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.ISaleService, BillingSystem.Application.Services.SaleService>();
