@@ -10,13 +10,16 @@ public class BranchMovementService : IBranchMovementService
 {
     private readonly IBranchMovementRepository _movementRepository;
     private readonly IBranchRepository _branchRepository;
+    private readonly IAccountingService _accountingService;
 
     public BranchMovementService(
         IBranchMovementRepository movementRepository,
-        IBranchRepository branchRepository)
+        IBranchRepository branchRepository,
+        IAccountingService accountingService)
     {
         _movementRepository = movementRepository;
         _branchRepository = branchRepository;
+        _accountingService = accountingService;
     }
 
     public async Task<Result<BranchMovement>> RegisterMovementAsync(BranchMovement movement)
@@ -64,6 +67,11 @@ public class BranchMovementService : IBranchMovementService
             movement.Date = DateTime.UtcNow;
             var id = await _movementRepository.AddAsync(movement);
             movement.Id = id;
+
+            if (movement.AccountId.HasValue)
+            {
+                await _accountingService.RecordBranchMovementAsync(movement);
+            }
 
             scope.Complete();
             return Result<BranchMovement>.Success(movement, "Movimiento registrado correctamente.");

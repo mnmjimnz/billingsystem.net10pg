@@ -127,6 +127,46 @@ public class AccountingService : IAccountingService
         await _accountingRepo.AddJournalEntryAsync(entry, details);
     }
 
+    public async Task<bool> RecordBranchMovementAsync(BranchMovement movement)
+    {
+        if (movement.AccountId == null) return false;
+
+        var accounts = await _accountingRepo.GetAccountsAsync();
+        var selectedAccount = accounts.FirstOrDefault(a => a.Id == movement.AccountId.Value);
+        if (selectedAccount == null) return false;
+
+        int cajaId = accounts.FirstOrDefault(a => a.Code == "1.01.01")?.Id ?? 0;
+        int bancoId = accounts.FirstOrDefault(a => a.Code == "1.01.02")?.Id ?? 0;
+
+        int cashAccountId = movement.PaymentMethod == "Bank" ? bancoId : cajaId;
+
+        if (cashAccountId == 0) return false;
+
+        var entry = new JournalEntry
+        {
+            Date = movement.Date,
+            Description = $"Movimiento de Sucursal - {movement.Category} - {movement.Description}",
+            ReferenceType = "Movement",
+            ReferenceId = movement.Id
+        };
+
+        var details = new List<JournalEntryDetail>();
+
+        if (movement.Type == "IN")
+        {
+            details.Add(new JournalEntryDetail { AccountId = cashAccountId, Debit = movement.Amount });
+            details.Add(new JournalEntryDetail { AccountId = selectedAccount.Id, Credit = movement.Amount });
+        }
+        else if (movement.Type == "OUT")
+        {
+            details.Add(new JournalEntryDetail { AccountId = selectedAccount.Id, Debit = movement.Amount });
+            details.Add(new JournalEntryDetail { AccountId = cashAccountId, Credit = movement.Amount });
+        }
+
+        await _accountingRepo.AddJournalEntryAsync(entry, details);
+        return true;
+    }
+
     public async Task RecordManualEntryAsync(string description, string referenceType, int referenceId, IEnumerable<JournalEntryDetail> details)
     {
         var entry = new JournalEntry
