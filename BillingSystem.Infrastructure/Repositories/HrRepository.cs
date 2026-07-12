@@ -34,7 +34,7 @@ public class HrRepository : BillingSystem.Domain.Interfaces.IHrRepository
     {
         using var connection = _db.CreateConnection();
         return await connection.QueryFirstOrDefaultAsync<Attendance>(
-            "SELECT * FROM Attendances WHERE UserId = @UserId AND Date = @Date AND IsActive = TRUE LIMIT 1", 
+            "SELECT Id, UserId, Date::timestamp as Date, CheckInTime, CheckOutTime, Status, CreatedAt, UpdatedAt, IsActive FROM Attendances WHERE UserId = @UserId AND Date = @Date AND IsActive = TRUE LIMIT 1", 
             new { UserId = userId, Date = date });
     }
 
@@ -42,7 +42,7 @@ public class HrRepository : BillingSystem.Domain.Interfaces.IHrRepository
     {
         using var connection = _db.CreateConnection();
         return await connection.QueryAsync<Attendance>(
-            "SELECT * FROM Attendances WHERE Date >= @StartDate AND Date <= @EndDate AND IsActive = TRUE ORDER BY Date DESC", 
+            "SELECT Id, UserId, Date::timestamp as Date, CheckInTime, CheckOutTime, Status, CreatedAt, UpdatedAt, IsActive FROM Attendances WHERE Date >= @StartDate AND Date <= @EndDate AND IsActive = TRUE ORDER BY Date DESC", 
             new { StartDate = startDate, EndDate = endDate });
     }
     
@@ -66,7 +66,7 @@ public class HrRepository : BillingSystem.Domain.Interfaces.IHrRepository
     public async Task<IEnumerable<PayrollRun>> GetPayrollRunsAsync()
     {
         using var connection = _db.CreateConnection();
-        return await connection.QueryAsync<PayrollRun>("SELECT * FROM PayrollRuns WHERE IsActive = TRUE ORDER BY PeriodStart DESC");
+        return await connection.QueryAsync<PayrollRun>("SELECT Id, PeriodStart::timestamp as PeriodStart, PeriodEnd::timestamp as PeriodEnd, ProcessedDate, Notes, CreatedAt, UpdatedAt, IsActive FROM PayrollRuns WHERE IsActive = TRUE ORDER BY PeriodStart DESC");
     }
     
     public async Task<IEnumerable<dynamic>> GetPayrollDetailsAsync(int payrollRunId)
