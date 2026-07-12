@@ -15,5 +15,5 @@ public interface IAccountingRepository
     
     // Ledgers & balances
     Task<IEnumerable<dynamic>> GetAccountLedgerAsync(int accountId, DateTime startDate, DateTime endDate);
-    Task<IEnumerable<dynamic>> GetTrialBalanceAsync(DateTime asOfDate);
+    Task<IEnumerable<dynamic>> GetTrialBalanceAsync(DateTime startDate, DateTime endDate);
 }

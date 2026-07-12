@@ -115,19 +115,25 @@ public class AccountingRepository : IAccountingRepository
         return await connection.QueryAsync<dynamic>(sql, new { AccountId = accountId, StartDate = startDate, EndDate = endDate });
     }
 
-    public async Task<IEnumerable<dynamic>> GetTrialBalanceAsync(DateTime asOfDate)
+    public async Task<IEnumerable<dynamic>> GetTrialBalanceAsync(DateTime startDate, DateTime endDate)
     {
         using var connection = _db.CreateConnection();
         var sql = @"
             SELECT a.Id, a.Code, a.Name, a.Type,
-                   SUM(jed.Debit) as TotalDebit, SUM(jed.Credit) as TotalCredit
+                   COALESCE(SUM(CASE WHEN je.Date < @StartDate THEN jed.Debit - jed.Credit ELSE 0 END), 0) as InitialBalance,
+                   COALESCE(SUM(CASE WHEN je.Date >= @StartDate AND je.Date <= @EndDate THEN jed.Debit ELSE 0 END), 0) as PeriodDebit,
+                   COALESCE(SUM(CASE WHEN je.Date >= @StartDate AND je.Date <= @EndDate THEN jed.Credit ELSE 0 END), 0) as PeriodCredit
             FROM Accounts a
             LEFT JOIN JournalEntryDetails jed ON a.Id = jed.AccountId AND jed.IsActive = TRUE
-            LEFT JOIN JournalEntries je ON jed.JournalEntryId = je.Id AND je.IsActive = TRUE AND je.Date <= @AsOfDate
+            LEFT JOIN JournalEntries je ON jed.JournalEntryId = je.Id AND je.IsActive = TRUE AND je.Date <= @EndDate
             WHERE a.IsActive = TRUE
             GROUP BY a.Id, a.Code, a.Name, a.Type
+            HAVING 
+                COALESCE(SUM(CASE WHEN je.Date < @StartDate THEN jed.Debit - jed.Credit ELSE 0 END), 0) != 0 OR
+                COALESCE(SUM(CASE WHEN je.Date >= @StartDate AND je.Date <= @EndDate THEN jed.Debit ELSE 0 END), 0) != 0 OR
+                COALESCE(SUM(CASE WHEN je.Date >= @StartDate AND je.Date <= @EndDate THEN jed.Credit ELSE 0 END), 0) != 0
             ORDER BY a.Code
         ";
-        return await connection.QueryAsync<dynamic>(sql, new { AsOfDate = asOfDate });
+        return await connection.QueryAsync<dynamic>(sql, new { StartDate = startDate, EndDate = endDate });
     }
 }

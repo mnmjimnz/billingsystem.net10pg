@@ -62,10 +62,11 @@ public class AccountingController : ControllerBase
     }
 
     [HttpGet("trial-balance")]
-    public async Task<IActionResult> GetTrialBalance([FromQuery] DateTime? asOfDate)
+    public async Task<IActionResult> GetTrialBalance([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
     {
-        var date = asOfDate ?? DateTime.UtcNow;
-        var balance = await _repo.GetTrialBalanceAsync(date);
+        var start = startDate ?? new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var end = endDate ?? DateTime.UtcNow;
+        var balance = await _repo.GetTrialBalanceAsync(start, end);
         return Ok(balance);
     }
 }
