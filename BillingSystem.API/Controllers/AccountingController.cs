@@ -70,7 +70,10 @@ public class AccountingController : ControllerBase
         // Ensure end date covers the entire day (up to 23:59:59)
         end = end.Date.AddDays(1).AddTicks(-1);
         
-        var balance = await _repo.GetTrialBalanceAsync(start, end);
+        var startUtc = DateTime.SpecifyKind(start, DateTimeKind.Utc);
+        var endUtc = DateTime.SpecifyKind(end, DateTimeKind.Utc);
+        
+        var balance = await _repo.GetTrialBalanceAsync(startUtc, endUtc);
         return Ok(balance);
     }
 }
