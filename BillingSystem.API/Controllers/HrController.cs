@@ -2,6 +2,7 @@ using BillingSystem.Domain.Entities;
 using BillingSystem.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BillingSystem.Application.Interfaces;
 
 namespace BillingSystem.API.Controllers;
 
@@ -13,12 +14,14 @@ public class HrController : ControllerBase
     private readonly IHrRepository _hrRepo;
     private readonly IUserRepository _userRepo;
     private readonly ISettingsRepository _settingsRepo;
+    private readonly IAccountingService _accountingService;
 
-    public HrController(IHrRepository hrRepo, IUserRepository userRepo, ISettingsRepository settingsRepo)
+    public HrController(IHrRepository hrRepo, IUserRepository userRepo, ISettingsRepository settingsRepo, IAccountingService accountingService)
     {
         _hrRepo = hrRepo;
         _userRepo = userRepo;
         _settingsRepo = settingsRepo;
+        _accountingService = accountingService;
     }
 
     [HttpGet("users")]
@@ -131,6 +134,10 @@ public class HrController : ControllerBase
             };
             await _hrRepo.AddPayrollDetailAsync(detail);
         }
+        
+        // Fetch payroll details for accounting
+        var details = await _hrRepo.GetPayrollDetailsAsync(runId);
+        await _accountingService.RecordPayrollAsync(request, details);
 
         return Ok(new { message = "Payroll calculated successfully", runId = runId });
     }

@@ -55,6 +55,8 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IThemeRepository, ThemeRepository>();
 builder.Services.AddScoped<IThemeSettingRepository, ThemeSettingRepository>();
 builder.Services.AddScoped<BillingSystem.Domain.Interfaces.IHrRepository, BillingSystem.Infrastructure.Repositories.HrRepository>();
+builder.Services.AddScoped<BillingSystem.Domain.Interfaces.IAccountingRepository, BillingSystem.Infrastructure.Repositories.AccountingRepository>();
+builder.Services.AddScoped<BillingSystem.Domain.Interfaces.IBankRepository, BillingSystem.Infrastructure.Repositories.BankRepository>();
 
 // Dependency Injection - Application Services
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.ISaleService, BillingSystem.Application.Services.SaleService>();
@@ -66,6 +68,7 @@ builder.Services.AddScoped<BillingSystem.Application.Interfaces.IReportService, 
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.ICashRegisterService, BillingSystem.Application.Services.CashRegisterService>();
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.IBranchMovementService, BillingSystem.Application.Services.BranchMovementService>();
 builder.Services.AddScoped<BillingSystem.Application.Interfaces.IStockTransferService, BillingSystem.Application.Services.StockTransferService>();
+builder.Services.AddScoped<BillingSystem.Application.Interfaces.IAccountingService, BillingSystem.Application.Services.AccountingService>();
 
 // JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

@@ -15,6 +15,7 @@ public class PurchaseService : IPurchaseService
     private readonly INotificationRepository _notificationRepo;
     private readonly INotificationService _notificationService;
     private readonly IBranchRepository _branchRepo;
+    private readonly IAccountingService _accountingService;
 
     public PurchaseService(
         IPurchaseRepository purchaseRepo,
@@ -23,7 +24,8 @@ public class PurchaseService : IPurchaseService
         IPayableRepository payableRepo,
         INotificationRepository notificationRepo,
         INotificationService notificationService,
-        IBranchRepository branchRepo)
+        IBranchRepository branchRepo,
+        IAccountingService accountingService)
     {
         _purchaseRepo = purchaseRepo;
         _productRepo = productRepo;
@@ -32,6 +34,7 @@ public class PurchaseService : IPurchaseService
         _notificationRepo = notificationRepo;
         _notificationService = notificationService;
         _branchRepo = branchRepo;
+        _accountingService = accountingService;
     }
 
     public async Task<int> CreatePurchaseAsync(PurchaseDto dto, int userId)
@@ -116,6 +119,8 @@ public class PurchaseService : IPurchaseService
             await _notificationRepo.AddAsync(notification);
             await _notificationService.DispatchNotificationAsync(notification.Title, notification.Message, notification.Type, purchaseId);
         }
+
+        await _accountingService.RecordPurchaseAsync(purchase);
 
         return purchaseId;
     }

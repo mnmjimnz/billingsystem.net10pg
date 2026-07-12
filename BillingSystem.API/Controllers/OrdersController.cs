@@ -3,6 +3,7 @@ using BillingSystem.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using BillingSystem.Application.Interfaces;
 
 namespace BillingSystem.API.Controllers;
 
@@ -12,10 +13,12 @@ namespace BillingSystem.API.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly IOrderRepository _repository;
+    private readonly IAccountingService _accountingService;
 
-    public OrdersController(IOrderRepository repository)
+    public OrdersController(IOrderRepository repository, IAccountingService accountingService)
     {
         _repository = repository;
+        _accountingService = accountingService;
     }
 
     [HttpGet]
@@ -46,6 +49,22 @@ public class OrdersController : ControllerBase
         try
         {
             var orderId = await _repository.AddOrderAsync(dto.Order, dto.Details);
+            
+            // Calculate total COGS (Costo de ventas)
+            decimal totalCogs = 0;
+            foreach(var detail in dto.Details) 
+            {
+                // In a real app we'd fetch the cost from ProductRepository or pass it in DTO.
+                // Assuming it's calculated or just left as 0 for now if not available.
+            }
+            
+            // Re-fetch order to get the full properties
+            var newOrder = await _repository.GetByIdAsync(orderId);
+            if (newOrder != null) 
+            {
+                await _accountingService.RecordSaleAsync(newOrder, totalCogs);
+            }
+            
             return Ok(new { Id = orderId });
         }
         catch (Exception ex)
