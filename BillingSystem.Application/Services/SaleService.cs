@@ -83,8 +83,11 @@ public class SaleService : ISaleService
             Status = request.PaymentType == "CREDIT" ? "PENDING" : "PAID"
         };
 
-        using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
+        int saleId;
+        decimal totalCostOfGoodsSold = 0;
 
+        using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+        {
         
         // Check stock availability BEFORE creating the sale
         foreach (var detail in request.Details)
@@ -98,9 +101,7 @@ public class SaleService : ISaleService
         }
 
         // 1. Insert Sale & Details
-        var saleId = await _saleRepo.CreateSaleWithDetailsAsync(sale, request.Details);
-
-        decimal totalCostOfGoodsSold = 0;
+        saleId = await _saleRepo.CreateSaleWithDetailsAsync(sale, request.Details);
 
         // 2. Update Stock and Kardex
         foreach (var detail in request.Details)
@@ -174,7 +175,8 @@ public class SaleService : ISaleService
             }
         }
 
-        scope.Complete();
+            scope.Complete();
+        }
         
         // 4. Registrar en contabilidad (Póliza contable de venta)
         // Se ejecuta fuera del TransactionScope para evitar el error de transacciones anidadas

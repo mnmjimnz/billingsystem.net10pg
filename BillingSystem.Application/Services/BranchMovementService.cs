@@ -48,10 +48,10 @@ public class BranchMovementService : IBranchMovementService
                 return Result<BranchMovement>.Failure("El monto debe ser mayor a cero.");
             }
 
-            using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
-
-            if (movement.CashRegisterId.HasValue)
+            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
+                if (movement.CashRegisterId.HasValue)
+                {
                 var session = await _cashRepo.GetActiveSessionByRegisterAsync(movement.CashRegisterId.Value);
                 if (session == null)
                     return Result<BranchMovement>.Failure("La caja seleccionada no tiene un turno abierto.");
@@ -97,8 +97,8 @@ public class BranchMovementService : IBranchMovementService
             movement.Date = DateTime.UtcNow;
             var id = await _movementRepository.AddAsync(movement);
             movement.Id = id;
-
-            scope.Complete();
+                scope.Complete();
+            }
 
             // Record accounting outside the transaction scope to avoid nested transaction issues
             // with AccountingRepository's internal BeginTransaction.
