@@ -26,6 +26,20 @@ public class CashRegistersController : ControllerBase
         return Ok(new { success = true, hasOpenSession = session != null, session });
     }
 
+    [HttpGet("branch/{branchId}")]
+    public async Task<IActionResult> GetByBranch(int branchId)
+    {
+        try
+        {
+            var registers = await _cashService.GetRegistersByBranchAsync(branchId);
+            return Ok(new { success = true, data = registers });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { success = false, message = ex.Message });
+        }
+    }
+
     [HttpPost("open")]
     public async Task<IActionResult> OpenSession([FromBody] OpenSessionRequest req)
     {

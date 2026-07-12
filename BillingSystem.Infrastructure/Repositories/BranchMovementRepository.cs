@@ -29,8 +29,8 @@ public class BranchMovementRepository : IBranchMovementRepository
     public async Task<int> AddAsync(BranchMovement entity)
     {
         using var connection = _connectionFactory.CreateConnection();
-        var sql = @"INSERT INTO BranchMovements (BranchId, Amount, Type, Category, Description, UserId, EmployeeId, Date, CreatedAt, IsActive) 
-                    VALUES (@BranchId, @Amount, @Type, @Category, @Description, @UserId, @EmployeeId, @Date, @CreatedAt, @IsActive) RETURNING Id;";
+        var sql = @"INSERT INTO BranchMovements (BranchId, Amount, Type, Category, Description, UserId, EmployeeId, Date, CreatedAt, IsActive, CashRegisterId, AccountId, PaymentMethod) 
+                    VALUES (@BranchId, @Amount, @Type, @Category, @Description, @UserId, @EmployeeId, @Date, @CreatedAt, @IsActive, @CashRegisterId, @AccountId, @PaymentMethod) RETURNING Id;";
         return await connection.ExecuteScalarAsync<int>(sql, entity);
     }
 
@@ -100,5 +100,16 @@ public class BranchMovementRepository : IBranchMovementRepository
             Page = page,
             PageSize = pageSize
         };
+    }
+
+    public async Task<decimal> GetSessionMovementsTotalAsync(int cashRegisterId, DateTime openingTime, string type)
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        var sql = @"SELECT COALESCE(SUM(Amount), 0) FROM BranchMovements 
+                    WHERE CashRegisterId = @CashRegisterId 
+                    AND Type = @Type 
+                    AND Date >= @OpeningTime 
+                    AND IsActive = TRUE";
+        return await connection.ExecuteScalarAsync<decimal>(sql, new { CashRegisterId = cashRegisterId, Type = type, OpeningTime = openingTime });
     }
 }

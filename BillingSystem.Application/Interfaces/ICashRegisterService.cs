@@ -8,4 +8,5 @@ public interface ICashRegisterService
     Task<int> OpenSessionAsync(int userId, int cashRegisterId, decimal openingBalance);
     Task CloseSessionAsync(int userId);
     Task<object?> GetSessionSummaryAsync(int userId);
+    Task<IEnumerable<CashRegister>> GetRegistersByBranchAsync(int branchId);
 }

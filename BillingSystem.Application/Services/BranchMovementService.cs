@@ -11,15 +11,21 @@ public class BranchMovementService : IBranchMovementService
     private readonly IBranchMovementRepository _movementRepository;
     private readonly IBranchRepository _branchRepository;
     private readonly IAccountingService _accountingService;
+    private readonly ICashRegisterRepository _cashRepo;
+    private readonly ISaleRepository _saleRepo;
 
     public BranchMovementService(
         IBranchMovementRepository movementRepository,
         IBranchRepository branchRepository,
-        IAccountingService accountingService)
+        IAccountingService accountingService,
+        ICashRegisterRepository cashRepo,
+        ISaleRepository saleRepo)
     {
         _movementRepository = movementRepository;
         _branchRepository = branchRepository;
         _accountingService = accountingService;
+        _cashRepo = cashRepo;
+        _saleRepo = saleRepo;
     }
 
     public async Task<Result<BranchMovement>> RegisterMovementAsync(BranchMovement movement)
@@ -44,25 +50,49 @@ public class BranchMovementService : IBranchMovementService
 
             using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
-            if (movement.Type == "OUT")
+            if (movement.CashRegisterId.HasValue)
             {
-                if (branch.AvailableFunds < movement.Amount)
+                var session = await _cashRepo.GetActiveSessionByRegisterAsync(movement.CashRegisterId.Value);
+                if (session == null)
+                    return Result<BranchMovement>.Failure("La caja seleccionada no tiene un turno abierto.");
+
+                if (movement.Type == "OUT")
                 {
-                    return Result<BranchMovement>.Failure($"Fondos insuficientes en la sucursal. Disponible: ${branch.AvailableFunds:F2}");
+                    var salesTotal = await _saleRepo.GetSessionSalesTotalAsync(session.UserId, session.OpeningTime);
+                    var movsIn = await _movementRepository.GetSessionMovementsTotalAsync(movement.CashRegisterId.Value, session.OpeningTime, "IN");
+                    var movsOut = await _movementRepository.GetSessionMovementsTotalAsync(movement.CashRegisterId.Value, session.OpeningTime, "OUT");
+                    var currentCash = session.OpeningBalance + salesTotal + movsIn - movsOut;
+
+                    if (currentCash < movement.Amount)
+                        return Result<BranchMovement>.Failure($"Fondos insuficientes en la caja. Efectivo disponible: ${currentCash:F2}");
                 }
-                branch.AvailableFunds -= movement.Amount;
-            }
-            else if (movement.Type == "IN")
-            {
-                branch.AvailableFunds += movement.Amount;
+                else if (movement.Type != "IN")
+                {
+                    return Result<BranchMovement>.Failure("Tipo de movimiento inválido (Debe ser IN o OUT).");
+                }
             }
             else
             {
-                return Result<BranchMovement>.Failure("Tipo de movimiento inválido (Debe ser IN o OUT).");
-            }
+                if (movement.Type == "OUT")
+                {
+                    if (branch.AvailableFunds < movement.Amount)
+                    {
+                        return Result<BranchMovement>.Failure($"Fondos insuficientes en la bóveda/banco de la sucursal. Disponible: ${branch.AvailableFunds:F2}");
+                    }
+                    branch.AvailableFunds -= movement.Amount;
+                }
+                else if (movement.Type == "IN")
+                {
+                    branch.AvailableFunds += movement.Amount;
+                }
+                else
+                {
+                    return Result<BranchMovement>.Failure("Tipo de movimiento inválido (Debe ser IN o OUT).");
+                }
 
-            branch.UpdatedAt = DateTime.UtcNow;
-            await _branchRepository.UpdateAsync(branch);
+                branch.UpdatedAt = DateTime.UtcNow;
+                await _branchRepository.UpdateAsync(branch);
+            }
 
             movement.Date = DateTime.UtcNow;
             var id = await _movementRepository.AddAsync(movement);

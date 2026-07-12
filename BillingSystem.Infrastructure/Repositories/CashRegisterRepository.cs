@@ -20,6 +20,15 @@ public class CashRegisterRepository : ICashRegisterRepository
         );
     }
 
+    public async Task<CashRegisterSession?> GetActiveSessionByRegisterAsync(int cashRegisterId)
+    {
+        using var connection = _db.CreateConnection();
+        return await connection.QueryFirstOrDefaultAsync<CashRegisterSession>(
+            "SELECT * FROM CashRegisterSessions WHERE CashRegisterId = @CashRegisterId AND Status = 'OPEN' ORDER BY CreatedAt DESC LIMIT 1",
+            new { CashRegisterId = cashRegisterId }
+        );
+    }
+
     public async Task<int> OpenSessionAsync(CashRegisterSession session)
     {
         using var connection = _db.CreateConnection();

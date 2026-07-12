@@ -10,6 +10,10 @@ public class BranchMovement : BaseEntity
     public int UserId { get; set; }
     public int? EmployeeId { get; set; }
     public DateTime Date { get; set; } = DateTime.UtcNow;
+
+    public int? CashRegisterId { get; set; }
+    public CashRegister? CashRegister { get; set; }
+
     public int? AccountId { get; set; }
     public string PaymentMethod { get; set; } = "Cash"; // 'Cash', 'Bank'
     

@@ -6,6 +6,7 @@ namespace BillingSystem.Domain.Interfaces;
 public interface ICashRegisterRepository
 {
     Task<CashRegisterSession?> GetActiveSessionAsync(int userId);
+    Task<CashRegisterSession?> GetActiveSessionByRegisterAsync(int cashRegisterId);
     Task<int> OpenSessionAsync(CashRegisterSession session);
     Task CloseSessionAsync(CashRegisterSession session);
     Task<CashRegister?> GetDefaultRegisterAsync(int branchId);

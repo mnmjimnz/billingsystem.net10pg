@@ -10,17 +10,24 @@ public class CashRegisterService : ICashRegisterService
     private readonly ICashRegisterRepository _cashRepo;
     private readonly IBranchRepository _branchRepo;
     private readonly ISaleRepository _saleRepo;
+    private readonly IBranchMovementRepository _movementRepo;
 
-    public CashRegisterService(ICashRegisterRepository cashRepo, IBranchRepository branchRepo, ISaleRepository saleRepo)
+    public CashRegisterService(ICashRegisterRepository cashRepo, IBranchRepository branchRepo, ISaleRepository saleRepo, IBranchMovementRepository movementRepo)
     {
         _cashRepo = cashRepo;
         _branchRepo = branchRepo;
         _saleRepo = saleRepo;
+        _movementRepo = movementRepo;
     }
 
     public async Task<CashRegisterSession?> GetActiveSessionAsync(int userId)
     {
         return await _cashRepo.GetActiveSessionAsync(userId);
+    }
+
+    public async Task<IEnumerable<CashRegister>> GetRegistersByBranchAsync(int branchId)
+    {
+        return await _cashRepo.GetByBranchIdAsync(branchId);
     }
 
     public async Task<int> OpenSessionAsync(int userId, int cashRegisterId, decimal openingBalance)
@@ -62,12 +69,17 @@ public class CashRegisterService : ICashRegisterService
         if (session == null) return null;
 
         var salesTotal = await _saleRepo.GetSessionSalesTotalAsync(userId, session.OpeningTime);
-        var expectedBalance = session.OpeningBalance + salesTotal;
+        var movsIn = await _movementRepo.GetSessionMovementsTotalAsync(session.CashRegisterId, session.OpeningTime, "IN");
+        var movsOut = await _movementRepo.GetSessionMovementsTotalAsync(session.CashRegisterId, session.OpeningTime, "OUT");
+        
+        var expectedBalance = session.OpeningBalance + salesTotal + movsIn - movsOut;
 
         return new
         {
             session.OpeningBalance,
             salesTotal,
+            movsIn,
+            movsOut,
             expectedBalance,
             session.OpeningTime
         };
@@ -79,7 +91,10 @@ public class CashRegisterService : ICashRegisterService
         if (session == null) throw new Exception("No hay ninguna sesión de caja abierta.");
 
         var salesTotal = await _saleRepo.GetSessionSalesTotalAsync(userId, session.OpeningTime);
-        var calculatedBalance = session.OpeningBalance + salesTotal;
+        var movsIn = await _movementRepo.GetSessionMovementsTotalAsync(session.CashRegisterId, session.OpeningTime, "IN");
+        var movsOut = await _movementRepo.GetSessionMovementsTotalAsync(session.CashRegisterId, session.OpeningTime, "OUT");
+        
+        var calculatedBalance = session.OpeningBalance + salesTotal + movsIn - movsOut;
 
         using var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled);
 
