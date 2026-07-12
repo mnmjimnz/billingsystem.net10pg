@@ -60,6 +60,52 @@ public class AccountingService : IAccountingService
         await _accountingRepo.AddJournalEntryAsync(entry, details);
     }
 
+    public async Task RecordPosSaleAsync(Sale sale, decimal costOfGoodsSold)
+    {
+        var cajaId = await GetAccountIdByCode("1.01.01"); // Efectivo y equivalentes
+        var cxcId = await GetAccountIdByCode("1.01.03"); // Cuentas por cobrar
+        var ventasId = await GetAccountIdByCode("4.01.01"); // Ingresos por ventas
+        var costoVentasId = await GetAccountIdByCode("5.01.01"); // Costo de ventas
+        var inventarioId = await GetAccountIdByCode("1.01.04"); // Inventarios
+        var ivaId = await GetAccountIdByCode("2.01.02"); // IVA por Pagar
+
+        var details = new List<JournalEntryDetail>();
+
+        // Ingreso por venta
+        if (sale.PaymentType == "CASH" || sale.AmountTendered >= sale.Total)
+        {
+            details.Add(new JournalEntryDetail { AccountId = cajaId, Debit = sale.Total });
+        }
+        else // CREDIT (or partial)
+        {
+            if (sale.AmountTendered > 0)
+                details.Add(new JournalEntryDetail { AccountId = cajaId, Debit = sale.AmountTendered });
+            
+            var creditAmount = sale.Total - sale.AmountTendered;
+            if (creditAmount > 0)
+                details.Add(new JournalEntryDetail { AccountId = cxcId, Debit = creditAmount });
+        }
+
+        // Reconocer el ingreso (sin IVA)
+        var revenue = sale.Total - sale.TaxAmount;
+        details.Add(new JournalEntryDetail { AccountId = ventasId, Credit = revenue });
+        
+        // Reconocer el IVA si aplica
+        if (sale.TaxAmount > 0)
+        {
+            details.Add(new JournalEntryDetail { AccountId = ivaId, Credit = sale.TaxAmount });
+        }
+
+        // Costo de ventas y rebaja de inventario
+        if (costOfGoodsSold > 0)
+        {
+            details.Add(new JournalEntryDetail { AccountId = costoVentasId, Debit = costOfGoodsSold });
+            details.Add(new JournalEntryDetail { AccountId = inventarioId, Credit = costOfGoodsSold });
+        }
+
+        await RecordManualEntryAsync($"Venta POS #{sale.TicketNumber}", "SALE", sale.Id, details);
+    }
+
     public async Task RecordPurchaseAsync(Purchase purchase)
     {
         var inventarioId = await GetAccountIdByCode("1.01.04");
@@ -167,7 +213,7 @@ public class AccountingService : IAccountingService
         return true;
     }
 
-    public async Task RecordManualEntryAsync(string description, string referenceType, int referenceId, IEnumerable<JournalEntryDetail> details)
+    public async Task RecordManualEntryAsync(string description, string referenceType, int? referenceId, IEnumerable<JournalEntryDetail> details)
     {
         var entry = new JournalEntry
         {

@@ -16,6 +16,7 @@ public class SaleService : ISaleService
     private readonly INotificationService _notificationService;
     private readonly ICashRegisterRepository _cashRepo;
     private readonly ISettingsRepository _settingsRepo;
+    private readonly IAccountingService _accountingService;
 
     public SaleService(
         ISaleRepository saleRepo,
@@ -25,7 +26,8 @@ public class SaleService : ISaleService
         INotificationRepository notificationRepo,
         INotificationService notificationService,
         ICashRegisterRepository cashRepo,
-        ISettingsRepository settingsRepo)
+        ISettingsRepository settingsRepo,
+        IAccountingService accountingService)
     {
         _saleRepo = saleRepo;
         _productRepo = productRepo;
@@ -35,6 +37,7 @@ public class SaleService : ISaleService
         _notificationService = notificationService;
         _cashRepo = cashRepo;
         _settingsRepo = settingsRepo;
+        _accountingService = accountingService;
     }
 
     public async Task<(int SaleId, string TicketNumber)> CreateSaleAsync(CreateSaleRequest request, int userId, int branchId)
@@ -97,12 +100,16 @@ public class SaleService : ISaleService
         // 1. Insert Sale & Details
         var saleId = await _saleRepo.CreateSaleWithDetailsAsync(sale, request.Details);
 
+        decimal totalCostOfGoodsSold = 0;
+
         // 2. Update Stock and Kardex
         foreach (var detail in request.Details)
         {
             var product = await _productRepo.GetByIdAsync(detail.ProductId);
             if (product != null)
             {
+                totalCostOfGoodsSold += detail.Quantity * product.Cost;
+
                 // Log Movement
                 var movement = new InventoryMovement
                 {
@@ -166,6 +173,9 @@ public class SaleService : ISaleService
                 await _notificationService.DispatchNotificationAsync(notif.Title, notif.Message, notif.Type, arId); 
             }
         }
+
+        // 4. Registrar en contabilidad (Póliza contable de venta)
+        await _accountingService.RecordPosSaleAsync(sale, totalCostOfGoodsSold);
 
         scope.Complete();
         return (saleId, sale.TicketNumber);
