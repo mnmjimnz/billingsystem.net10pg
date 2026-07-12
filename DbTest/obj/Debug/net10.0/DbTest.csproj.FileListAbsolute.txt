@@ -1,0 +1,5 @@
+C:\Users\Mario\.gemini\antigravity\scratch\BillingInventorySystem\DbTest\obj\Debug\net10.0\DbTest.csproj.AssemblyReference.cache
+C:\Users\Mario\.gemini\antigravity\scratch\BillingInventorySystem\DbTest\obj\Debug\net10.0\DbTest.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Mario\.gemini\antigravity\scratch\BillingInventorySystem\DbTest\obj\Debug\net10.0\DbTest.AssemblyInfoInputs.cache
+C:\Users\Mario\.gemini\antigravity\scratch\BillingInventorySystem\DbTest\obj\Debug\net10.0\DbTest.AssemblyInfo.cs
+C:\Users\Mario\.gemini\antigravity\scratch\BillingInventorySystem\DbTest\obj\Debug\net10.0\DbTest.csproj.CoreCompileInputs.cache
