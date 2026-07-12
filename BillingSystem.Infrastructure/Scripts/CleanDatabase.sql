@@ -21,7 +21,8 @@ TRUNCATE TABLE
     orderdetails,
     bankreconciliations,
     bankreconciliationdetails,
-    stocktransfers
+    stocktransfers,
+    notifications
 RESTART IDENTITY CASCADE;
 
 -- Reset product stock and cost
