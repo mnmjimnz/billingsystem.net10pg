@@ -68,12 +68,15 @@ public class BranchMovementService : IBranchMovementService
             var id = await _movementRepository.AddAsync(movement);
             movement.Id = id;
 
+            scope.Complete();
+
+            // Record accounting outside the transaction scope to avoid nested transaction issues
+            // with AccountingRepository's internal BeginTransaction.
             if (movement.AccountId.HasValue)
             {
                 await _accountingService.RecordBranchMovementAsync(movement);
             }
 
-            scope.Complete();
             return Result<BranchMovement>.Success(movement, "Movimiento registrado correctamente.");
         }
         catch (Exception ex)
