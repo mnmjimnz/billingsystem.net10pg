@@ -125,6 +125,9 @@ public class DeliveryRouteRepository : IDeliveryRouteRepository
             stop.DeliveryRouteId = id;
             var stopSql = "INSERT INTO route_stops (DeliveryRouteId, OrderId, StopOrder, Status, EstimatedTime) VALUES (@DeliveryRouteId, @OrderId, @StopOrder, @Status, @EstimatedTime);";
             await connection.ExecuteAsync(stopSql, stop);
+            
+            // Auto-update order status
+            await connection.ExecuteAsync("UPDATE Orders SET Status = 'SHIPPED', UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @OrderId AND Status = 'PENDING';", new { OrderId = stop.OrderId });
         }
         return id;
     }
@@ -134,6 +137,9 @@ public class DeliveryRouteRepository : IDeliveryRouteRepository
         var sql = "UPDATE delivery_routes SET Date = @Date, DriverId = @DriverId, VehicleId = @VehicleId, BranchId = @BranchId, Status = @Status WHERE Id = @Id;";
         var res = await connection.ExecuteAsync(sql, entity);
         
+        // Revert orders back to PENDING before deleting them from the route, unless they are already DELIVERED
+        await connection.ExecuteAsync("UPDATE Orders SET Status = 'PENDING', UpdatedAt = CURRENT_TIMESTAMP WHERE Status != 'DELIVERED' AND Id IN (SELECT OrderId FROM route_stops WHERE DeliveryRouteId = @Id);", new { Id = entity.Id });
+        
         // Simplified stop update: Delete all and reinsert (in a real scenario we'd diff them)
         await connection.ExecuteAsync("DELETE FROM route_stops WHERE DeliveryRouteId = @Id;", new { Id = entity.Id });
         foreach (var stop in entity.Stops)
@@ -141,6 +147,9 @@ public class DeliveryRouteRepository : IDeliveryRouteRepository
             stop.DeliveryRouteId = entity.Id;
             var stopSql = "INSERT INTO route_stops (DeliveryRouteId, OrderId, StopOrder, Status, EstimatedTime) VALUES (@DeliveryRouteId, @OrderId, @StopOrder, @Status, @EstimatedTime);";
             await connection.ExecuteAsync(stopSql, stop);
+            
+            // Auto-update order status
+            await connection.ExecuteAsync("UPDATE Orders SET Status = 'SHIPPED', UpdatedAt = CURRENT_TIMESTAMP WHERE Id = @OrderId AND Status = 'PENDING';", new { OrderId = stop.OrderId });
         }
         return res;
     }
