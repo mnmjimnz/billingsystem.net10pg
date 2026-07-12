@@ -66,6 +66,10 @@ public class AccountingController : ControllerBase
     {
         var start = startDate ?? new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
         var end = endDate ?? DateTime.UtcNow;
+        
+        // Ensure end date covers the entire day (up to 23:59:59)
+        end = end.Date.AddDays(1).AddTicks(-1);
+        
         var balance = await _repo.GetTrialBalanceAsync(start, end);
         return Ok(balance);
     }
