@@ -47,6 +47,7 @@ public class HrController : ControllerBase
         existing.JobTitle = dto.JobTitle;
         existing.DocumentId = dto.DocumentId;
         existing.BaseBonus = dto.BaseBonus;
+        existing.IncomeTaxPercentage = dto.IncomeTaxPercentage;
         
         await _userRepo.UpdateAsync(existing);
         return Ok(existing);
@@ -100,7 +101,7 @@ public class HrController : ControllerBase
         // 2. Get global settings for deductions
         var settings = await _settingsRepo.GetSettingsAsync();
         decimal igssPercentage = settings.SocialSecurityPercentage / 100m;
-        decimal isrPercentage = settings.IncomeTaxPercentage / 100m;
+        decimal afpPercentage = settings.AfpPercentage / 100m;
         
         // 3. Create the Run
         request.ProcessedDate = DateTime.UtcNow;
@@ -112,9 +113,10 @@ public class HrController : ControllerBase
             decimal baseSalary = user.Salary ?? 0;
             decimal bonus = user.BaseBonus ?? 0;
             decimal extraHours = 0; // In a full implementation we would sum hours from Attendances > 8 hrs
+            decimal isrPercentage = user.IncomeTaxPercentage / 100m;
             
             decimal grossPay = baseSalary + extraHours + bonus;
-            decimal deductions = (grossPay * igssPercentage) + (grossPay * isrPercentage);
+            decimal deductions = (baseSalary * igssPercentage) + (baseSalary * afpPercentage) + (baseSalary * isrPercentage);
             decimal netPay = grossPay - deductions;
             
             var detail = new PayrollDetail

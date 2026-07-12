@@ -18,4 +18,5 @@ public class User : BaseEntity
     public string? JobTitle { get; set; }
     public string? DocumentId { get; set; } // DPI/Cedula/SSN
     public decimal? BaseBonus { get; set; }
+    public decimal IncomeTaxPercentage { get; set; }
 }

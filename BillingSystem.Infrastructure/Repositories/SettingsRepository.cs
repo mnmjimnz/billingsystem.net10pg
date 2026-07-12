@@ -1,4 +1,4 @@
-using BillingSystem.Domain.Entities;
+﻿using BillingSystem.Domain.Entities;
 using BillingSystem.Domain.Interfaces;
 using BillingSystem.Infrastructure.Data;
 using Dapper;
@@ -45,7 +45,7 @@ public class SettingsRepository : ISettingsRepository
                     SliderImage2 = @SliderImage2,
                     SliderImage3 = @SliderImage3,
                     SocialSecurityPercentage = @SocialSecurityPercentage,
-                    IncomeTaxPercentage = @IncomeTaxPercentage,
+                    AfpPercentage = @AfpPercentage,
                     UpdatedAt = CURRENT_TIMESTAMP
                 WHERE Id = (SELECT Id FROM CompanySettings LIMIT 1);";
             await connection.ExecuteAsync(sql, settings);
@@ -57,12 +57,12 @@ public class SettingsRepository : ISettingsRepository
                     CompanyName, Address, Phone, Email, TaxPercentage, 
                     StoreTheme, ShowStoreSlider, StoreProductsPerPage, 
                     SliderImage1, SliderImage2, SliderImage3, 
-                    SocialSecurityPercentage, IncomeTaxPercentage, UpdatedAt)
+                    SocialSecurityPercentage, AfpPercentage, UpdatedAt)
                 VALUES (
                     @CompanyName, @Address, @Phone, @Email, @TaxPercentage, 
                     @StoreTheme, @ShowStoreSlider, @StoreProductsPerPage, 
                     @SliderImage1, @SliderImage2, @SliderImage3, 
-                    @SocialSecurityPercentage, @IncomeTaxPercentage, CURRENT_TIMESTAMP);";
+                    @SocialSecurityPercentage, @AfpPercentage, CURRENT_TIMESTAMP);";
             await connection.ExecuteAsync(sql, settings);
         }
     }

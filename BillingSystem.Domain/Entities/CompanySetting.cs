@@ -18,7 +18,7 @@ public class CompanySetting
     
     // HR Global Settings
     public decimal SocialSecurityPercentage { get; set; } = 4.83m; // IGSS in Guatemala default
-    public decimal IncomeTaxPercentage { get; set; } = 0m; // Default ISR
+    public decimal AfpPercentage { get; set; } = 0m; // Default ISR
     
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

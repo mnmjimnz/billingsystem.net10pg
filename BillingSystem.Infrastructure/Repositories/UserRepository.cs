@@ -30,15 +30,15 @@ public class UserRepository : IUserRepository
     public async Task<int> AddAsync(User entity)
     {
         using var connection = _connectionFactory.CreateConnection();
-        var sql = @"INSERT INTO Users (Username, PasswordHash, FullName, RoleId, BranchId, CreatedAt, IsActive, Salary, HireDate, TerminationDate, TerminationReason, JobTitle, DocumentId, BaseBonus) 
-                    VALUES (@Username, @PasswordHash, @FullName, @RoleId, @BranchId, @CreatedAt, @IsActive, @Salary, @HireDate, @TerminationDate, @TerminationReason, @JobTitle, @DocumentId, @BaseBonus) RETURNING Id;";
+        var sql = @"INSERT INTO Users (Username, PasswordHash, FullName, RoleId, BranchId, CreatedAt, IsActive, Salary, HireDate, TerminationDate, TerminationReason, JobTitle, DocumentId, BaseBonus, IncomeTaxPercentage) 
+                    VALUES (@Username, @PasswordHash, @FullName, @RoleId, @BranchId, @CreatedAt, @IsActive, @Salary, @HireDate, @TerminationDate, @TerminationReason, @JobTitle, @DocumentId, @BaseBonus, @IncomeTaxPercentage) RETURNING Id;";
         return await connection.ExecuteScalarAsync<int>(sql, entity);
     }
 
     public async Task<int> UpdateAsync(User entity)
     {
         using var connection = _connectionFactory.CreateConnection();
-        var sql = @"UPDATE Users SET Username = @Username, FullName = @FullName, RoleId = @RoleId, BranchId = @BranchId, UpdatedAt = @UpdatedAt, IsActive = @IsActive, Salary = @Salary, HireDate = @HireDate, TerminationDate = @TerminationDate, TerminationReason = @TerminationReason, JobTitle = @JobTitle, DocumentId = @DocumentId, BaseBonus = @BaseBonus WHERE Id = @Id;";
+        var sql = @"UPDATE Users SET Username = @Username, FullName = @FullName, RoleId = @RoleId, BranchId = @BranchId, UpdatedAt = @UpdatedAt, IsActive = @IsActive, Salary = @Salary, HireDate = @HireDate, TerminationDate = @TerminationDate, TerminationReason = @TerminationReason, JobTitle = @JobTitle, DocumentId = @DocumentId, BaseBonus = @BaseBonus, IncomeTaxPercentage = @IncomeTaxPercentage WHERE Id = @Id;";
         return await connection.ExecuteAsync(sql, entity);
     }
 
