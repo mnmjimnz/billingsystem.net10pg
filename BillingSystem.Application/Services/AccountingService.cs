@@ -125,13 +125,22 @@ public class AccountingService : IAccountingService
             new JournalEntryDetail { AccountId = inventarioId, Debit = purchase.Total }
         };
 
-        if (purchase.Status == "Paid")
+        if (purchase.Status == "Paid" || purchase.AmountPaid >= purchase.Total)
         {
             details.Add(new JournalEntryDetail { AccountId = cajaId, Credit = purchase.Total });
         }
         else
         {
-            details.Add(new JournalEntryDetail { AccountId = cxpId, Credit = purchase.Total });
+            if (purchase.AmountPaid > 0)
+            {
+                details.Add(new JournalEntryDetail { AccountId = cajaId, Credit = purchase.AmountPaid });
+            }
+
+            var creditAmount = purchase.Total - purchase.AmountPaid;
+            if (creditAmount > 0)
+            {
+                details.Add(new JournalEntryDetail { AccountId = cxpId, Credit = creditAmount });
+            }
         }
 
         await _accountingRepo.AddJournalEntryAsync(entry, details);

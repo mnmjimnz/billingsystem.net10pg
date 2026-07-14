@@ -16,6 +16,7 @@ public class PurchaseService : IPurchaseService
     private readonly INotificationService _notificationService;
     private readonly IBranchRepository _branchRepo;
     private readonly IAccountingService _accountingService;
+    private readonly IBranchMovementService _branchMovementService;
 
     public PurchaseService(
         IPurchaseRepository purchaseRepo,
@@ -25,7 +26,8 @@ public class PurchaseService : IPurchaseService
         INotificationRepository notificationRepo,
         INotificationService notificationService,
         IBranchRepository branchRepo,
-        IAccountingService accountingService)
+        IAccountingService accountingService,
+        IBranchMovementService branchMovementService)
     {
         _purchaseRepo = purchaseRepo;
         _productRepo = productRepo;
@@ -35,6 +37,7 @@ public class PurchaseService : IPurchaseService
         _notificationService = notificationService;
         _branchRepo = branchRepo;
         _accountingService = accountingService;
+        _branchMovementService = branchMovementService;
     }
 
     public async Task<int> CreatePurchaseAsync(PurchaseDto dto, int userId)
@@ -49,7 +52,7 @@ public class PurchaseService : IPurchaseService
             {
                 throw new Exception($"Fondos insuficientes en la sucursal. Disponible: ${branch.AvailableFunds}, Requerido: ${dto.AmountPaid}");
             }
-            branch.AvailableFunds -= dto.AmountPaid;
+            // Eliminamos la resta manual, delegándola a BranchMovementService
         }
 
         var purchase = new Purchase
@@ -66,7 +69,16 @@ public class PurchaseService : IPurchaseService
 
         if (dto.AmountPaid > 0)
         {
-            await _branchRepo.UpdateAsync(branch);
+            var movement = new BranchMovement
+            {
+                BranchId = dto.BranchId,
+                Amount = dto.AmountPaid,
+                Type = "OUT",
+                Category = "Compras",
+                Description = $"Abono a compra {dto.InvoiceNumber}",
+                UserId = userId
+            };
+            await _branchMovementService.RegisterMovementAsync(movement);
         }
 
         var purchaseId = await _purchaseRepo.CreatePurchaseWithDetailsAsync(purchase, dto.Details);

@@ -1,5 +1,6 @@
 using BillingSystem.Domain.Entities;
 using BillingSystem.Domain.Interfaces;
+using BillingSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,10 +12,14 @@ namespace BillingSystem.API.Controllers;
 public class BranchesController : ControllerBase
 {
     private readonly IBranchRepository _repo;
+    private readonly IBranchMovementService _movementService;
+    private readonly IAccountingRepository _accountingRepo;
 
-    public BranchesController(IBranchRepository repo)
+    public BranchesController(IBranchRepository repo, IBranchMovementService movementService, IAccountingRepository accountingRepo)
     {
         _repo = repo;
+        _movementService = movementService;
+        _accountingRepo = accountingRepo;
     }
 
     [HttpGet]
@@ -37,9 +42,32 @@ public class BranchesController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] Branch branch)
     {
+        var initialFunds = branch.AvailableFunds;
+        branch.AvailableFunds = 0; // Se inicializa en 0 para que el movimiento lo sume
         branch.CreatedAt = DateTime.UtcNow;
         branch.IsActive = true;
         var id = await _repo.AddAsync(branch);
+
+        if (initialFunds > 0)
+        {
+            var accounts = await _accountingRepo.GetAccountsAsync();
+            var capitalId = accounts.FirstOrDefault(a => a.Code == "3.01.01")?.Id;
+
+            int.TryParse(User.FindFirst("UserId")?.Value, out int userId);
+
+            var movement = new BranchMovement
+            {
+                BranchId = id,
+                Amount = initialFunds,
+                Type = "IN",
+                Category = "Apertura",
+                Description = "Fondo inicial de sucursal",
+                UserId = userId > 0 ? userId : 1, // Fallback to 1 if not found
+                AccountId = capitalId
+            };
+            await _movementService.RegisterMovementAsync(movement);
+        }
+
         return Ok(new { message = "Sucursal creada exitosamente", id });
     }
 
