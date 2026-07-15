@@ -35,6 +35,9 @@ public class CashRegisterService : ICashRegisterService
         var existing = await _cashRepo.GetActiveSessionAsync(userId);
         if (existing != null) throw new Exception("El usuario ya tiene una caja abierta.");
 
+        var registerInUse = await _cashRepo.GetActiveSessionByRegisterAsync(cashRegisterId);
+        if (registerInUse != null) throw new Exception("La caja seleccionada ya está aperturada por otro usuario.");
+
         var register = await _cashRepo.GetByIdAsync(cashRegisterId);
         if (register == null) throw new Exception("La caja seleccionada no existe.");
 
