@@ -1,6 +1,7 @@
 using BillingSystem.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BillingSystem.API.Extensions;
 
 namespace BillingSystem.API.Controllers;
 
@@ -26,6 +27,7 @@ public class UsersController : ControllerBase
     {
         user.CreatedAt = DateTime.UtcNow;
         user.IsActive = true;
+        user.IsAdmin = User.IsAdmin() ? user.IsAdmin : false;
         // Basic plain text for now to match AuthController
         var id = await _repo.AddAsync(user);
         return Ok(new { message = "Usuario creado exitosamente", id });
@@ -50,6 +52,7 @@ public class UsersController : ControllerBase
         existing.IsActive = user.IsActive;
         existing.TerminationDate = user.TerminationDate;
         existing.TerminationReason = user.TerminationReason;
+        existing.IsAdmin = User.IsAdmin() ? user.IsAdmin : existing.IsAdmin;
         existing.UpdatedAt = DateTime.UtcNow;
 
         await _repo.UpdateAsync(existing);
