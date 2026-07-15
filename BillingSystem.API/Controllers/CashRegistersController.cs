@@ -11,10 +11,12 @@ namespace BillingSystem.API.Controllers;
 public class CashRegistersController : ControllerBase
 {
     private readonly ICashRegisterService _cashService;
+    private readonly BillingSystem.Domain.Interfaces.ICashRegisterRepository _cashRepo;
 
-    public CashRegistersController(ICashRegisterService cashService)
+    public CashRegistersController(ICashRegisterService cashService, BillingSystem.Domain.Interfaces.ICashRegisterRepository cashRepo)
     {
         _cashService = cashService;
+        _cashRepo = cashRepo;
     }
 
     private int GetCurrentUserId() => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
@@ -23,7 +25,13 @@ public class CashRegistersController : ControllerBase
     public async Task<IActionResult> GetActiveSession()
     {
         var session = await _cashService.GetActiveSessionAsync(GetCurrentUserId());
-        return Ok(new { success = true, hasOpenSession = session != null, session });
+        int? branchId = null;
+        if (session != null)
+        {
+            var register = await _cashRepo.GetByIdAsync(session.CashRegisterId);
+            branchId = register?.BranchId;
+        }
+        return Ok(new { success = true, hasOpenSession = session != null, session, branchId });
     }
 
     [HttpGet("branch/{branchId}")]

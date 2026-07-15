@@ -19,10 +19,14 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int? branchId = null)
     {
-        var products = await _productRepository.GetAllAsync();
-        return Ok(products);
+        if (!User.IsAdmin())
+        {
+            branchId = User.GetBranchId();
+        }
+        var paged = await _productRepository.GetPagedAsync("", 1, 100000, branchId);
+        return Ok(paged.Items);
     }
 
     [HttpGet("paged")]
