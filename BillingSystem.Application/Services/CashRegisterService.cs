@@ -62,6 +62,20 @@ public class CashRegisterService : ICashRegisterService
         };
         var sessionId = await _cashRepo.OpenSessionAsync(session);
 
+        var movementOut = new BranchMovement
+        {
+            BranchId = branch.Id,
+            Amount = openingBalance,
+            Type = "OUT",
+            Category = "CASH_OPENING",
+            Description = $"Retiro por fondo de apertura para Caja #{register.Id}",
+            UserId = userId,
+            CashRegisterId = register.Id,
+            PaymentMethod = "Cash",
+            Date = DateTime.UtcNow
+        };
+        await _movementRepo.AddAsync(movementOut);
+
         scope.Complete();
         return sessionId;
     }
@@ -115,6 +129,20 @@ public class CashRegisterService : ICashRegisterService
             {
                 branch.AvailableFunds += calculatedBalance;
                 await _branchRepo.UpdateAsync(branch);
+
+                var movementIn = new BranchMovement
+                {
+                    BranchId = branch.Id,
+                    Amount = calculatedBalance,
+                    Type = "IN",
+                    Category = "CASH_CLOSING",
+                    Description = $"Ingreso por cierre de turno para Caja #{register.Id}",
+                    UserId = userId,
+                    CashRegisterId = register.Id,
+                    PaymentMethod = "Cash",
+                    Date = DateTime.UtcNow
+                };
+                await _movementRepo.AddAsync(movementIn);
             }
         }
 
