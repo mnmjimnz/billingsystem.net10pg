@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "esgQZ++A+vY=",
+  "dgSpecHash": "Ai50KsIOZug=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Mario\\.gemini\\antigravity\\scratch\\BillingInventorySystem\\RunMigration3\\RunMigration3.csproj",
+  "projectFilePath": "C:\\Users\\Mario\\.gemini\\antigravity\\scratch\\BillingInventorySystem\\Backend\\RunMigration3\\RunMigration3.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Mario\\.nuget\\packages\\dapper\\2.1.79\\dapper.2.1.79.nupkg.sha512",
     "C:\\Users\\Mario\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\10.0.0\\microsoft.extensions.dependencyinjection.abstractions.10.0.0.nupkg.sha512",

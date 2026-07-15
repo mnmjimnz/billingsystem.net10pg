@@ -4,6 +4,7 @@ namespace BillingSystem.Application.DTOs;
 
 public class CreateSaleRequest
 {
+    public int? BranchId { get; set; }
     public int? CustomerId { get; set; }
     public decimal Subtotal { get; set; }
     public decimal Discount { get; set; }

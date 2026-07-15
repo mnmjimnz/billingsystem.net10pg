@@ -2,6 +2,7 @@ using BillingSystem.Application.DTOs;
 using BillingSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BillingSystem.API.Extensions;
 
 namespace BillingSystem.API.Controllers;
 
@@ -25,6 +26,10 @@ public class ReportsController : ControllerBase
         [FromQuery] int? userId, 
         [FromQuery] string? paymentType)
     {
+        if (!User.IsAdmin())
+        {
+            branchId = User.GetBranchId();
+        }
         var filter = new ReportFilterDto
         {
             StartDate = startDate,
@@ -57,6 +62,10 @@ public class ReportsController : ControllerBase
         [FromQuery] DateTime? endDate, 
         [FromQuery] int? branchId)
     {
+        if (!User.IsAdmin())
+        {
+            branchId = User.GetBranchId();
+        }
         var filter = new ReportFilterDto
         {
             StartDate = startDate,
@@ -75,7 +84,8 @@ public class ReportsController : ControllerBase
         var filter = new ReportFilterDto
         {
             StartDate = startDate,
-            EndDate = endDate
+            EndDate = endDate,
+            BranchId = User.IsAdmin() ? null : User.GetBranchId()
         };
         var result = await _reportService.GetKardexReportAsync(filter);
         return Ok(result);
@@ -92,7 +102,8 @@ public class ReportsController : ControllerBase
         var filter = new ReportFilterDto
         {
             StartDate = startDate,
-            EndDate = endDate
+            EndDate = endDate,
+            BranchId = User.IsAdmin() ? null : User.GetBranchId()
         };
         var result = await _reportService.GetPagedKardexAsync(filter, search, page, pageSize);
         return Ok(result);
@@ -105,6 +116,10 @@ public class ReportsController : ControllerBase
         [FromQuery] DateTime? endDate = null, 
         [FromQuery] int? branchId = null)
     {
+        if (!User.IsAdmin())
+        {
+            branchId = User.GetBranchId();
+        }
         var filter = new ReportFilterDto
         {
             StartDate = startDate,
@@ -124,6 +139,10 @@ public class ReportsController : ControllerBase
     [HttpGet("user-activity")]
     public async Task<IActionResult> GetUserActivity([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] int? userId, [FromQuery] int? branchId)
     {
+        if (!User.IsAdmin())
+        {
+            branchId = User.GetBranchId();
+        }
         var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate, UserId = userId, BranchId = branchId };
         return Ok(await _reportService.GetUserActivityAsync(filter));
     }
@@ -137,13 +156,17 @@ public class ReportsController : ControllerBase
     [HttpGet("income-statement")]
     public async Task<IActionResult> GetIncomeStatement([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate)
     {
-        var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate };
+        var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate, BranchId = User.IsAdmin() ? null : User.GetBranchId() };
         return Ok(await _reportService.GetIncomeStatementAsync(filter));
     }
 
     [HttpGet("purchases")]
     public async Task<IActionResult> GetPurchases([FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate, [FromQuery] int? branchId)
     {
+        if (!User.IsAdmin())
+        {
+            branchId = User.GetBranchId();
+        }
         var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate, BranchId = branchId };
         return Ok(await _reportService.GetPurchasesReportAsync(filter));
     }
@@ -151,7 +174,7 @@ public class ReportsController : ControllerBase
     [HttpGet("sales-analytics")]
     public async Task<IActionResult> GetSalesAnalytics([FromQuery] string groupBy = "month", [FromQuery] DateTime? startDate = null, [FromQuery] DateTime? endDate = null)
     {
-        var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate };
+        var filter = new ReportFilterDto { StartDate = startDate, EndDate = endDate, BranchId = User.IsAdmin() ? null : User.GetBranchId() };
         return Ok(await _reportService.GetSalesAnalyticsAsync(groupBy, filter));
     }
 }

@@ -226,11 +226,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Mario\\.gemini\\antigravity\\scratch\\BillingInventorySystem\\RunMigration3\\RunMigration3.csproj",
+      "projectUniqueName": "C:\\Users\\Mario\\.gemini\\antigravity\\scratch\\BillingInventorySystem\\Backend\\RunMigration3\\RunMigration3.csproj",
       "projectName": "RunMigration3",
-      "projectPath": "C:\\Users\\Mario\\.gemini\\antigravity\\scratch\\BillingInventorySystem\\RunMigration3\\RunMigration3.csproj",
+      "projectPath": "C:\\Users\\Mario\\.gemini\\antigravity\\scratch\\BillingInventorySystem\\Backend\\RunMigration3\\RunMigration3.csproj",
       "packagesPath": "C:\\Users\\Mario\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Mario\\.gemini\\antigravity\\scratch\\BillingInventorySystem\\RunMigration3\\obj\\",
+      "outputPath": "C:\\Users\\Mario\\.gemini\\antigravity\\scratch\\BillingInventorySystem\\Backend\\RunMigration3\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

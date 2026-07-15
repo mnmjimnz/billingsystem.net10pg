@@ -16,6 +16,6 @@ public interface IProductRepository : IRepository<Product>
     Task<IEnumerable<dynamic>> GetStockByBranchAsync(int productId);
     
     // Additional methods that might exist
-    Task<PagedResult<Product>> GetPagedAsync(string search, int page, int pageSize);
+    Task<PagedResult<Product>> GetPagedAsync(string search, int page, int pageSize, int? branchId = null);
     Task<IEnumerable<Product>> GetByCategoriesAsync(IEnumerable<int> categoryIds);
 }

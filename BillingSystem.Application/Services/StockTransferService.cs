@@ -63,19 +63,20 @@ public class StockTransferService : IStockTransferService
             Quantity = transfer.Quantity,
             PreviousStock = currentDestStock - transfer.Quantity,
             NewStock = currentDestStock,
+
             Description = $"Traslado desde sucursal ID: {transfer.FromBranchId}. Notas: {transfer.Notes}"
         });
 
         return transferId;
     }
 
-    public async Task<IEnumerable<StockTransfer>> GetAllTransfersAsync()
+    public async Task<IEnumerable<StockTransfer>> GetAllTransfersAsync(int? branchId = null)
     {
-        return await _transferRepo.GetAllTransfersAsync();
+        return await _transferRepo.GetAllTransfersAsync(branchId);
     }
 
-    public async Task<BillingSystem.Domain.Models.PagedResult<StockTransfer>> GetPagedTransfersAsync(int page, int pageSize)
+    public async Task<BillingSystem.Domain.Models.PagedResult<StockTransfer>> GetPagedTransfersAsync(int page, int pageSize, int? branchId = null)
     {
-        return await _transferRepo.GetPagedAsync(page, pageSize);
+        return await _transferRepo.GetPagedAsync(page, pageSize, branchId);
     }
 }

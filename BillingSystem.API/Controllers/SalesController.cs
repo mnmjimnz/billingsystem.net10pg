@@ -2,6 +2,7 @@ using BillingSystem.Application.DTOs;
 using BillingSystem.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BillingSystem.API.Extensions;
 
 namespace BillingSystem.API.Controllers;
 
@@ -23,7 +24,16 @@ public class SalesController : ControllerBase
         try
         {
             int.TryParse(User.FindFirst("UserId")?.Value, out int userId);
-            int.TryParse(User.FindFirst("BranchId")?.Value, out int branchId);
+            
+            int branchId;
+            if (User.IsAdmin() && request.BranchId.HasValue && request.BranchId.Value > 0)
+            {
+                branchId = request.BranchId.Value;
+            }
+            else
+            {
+                int.TryParse(User.FindFirst("BranchId")?.Value, out branchId);
+            }
 
             var result = await _saleService.CreateSaleAsync(request, userId, branchId);
             

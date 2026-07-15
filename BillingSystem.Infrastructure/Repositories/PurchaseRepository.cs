@@ -66,7 +66,7 @@ public class PurchaseRepository : IPurchaseRepository
     public Task<int> AddAsync(Purchase entity) => throw new NotImplementedException();
     public Task<int> UpdateAsync(Purchase entity) => throw new NotImplementedException();
 
-    public async Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize)
+    public async Task<BillingSystem.Domain.Models.PagedResult<dynamic>> GetPagedAsync(string search, int page, int pageSize, int? branchId = null)
     {
         using var connection = _db.CreateConnection();
         var searchPattern = $"%{search}%";
@@ -79,16 +79,21 @@ public class PurchaseRepository : IPurchaseRepository
                         JOIN Branches b ON p.BranchId = b.Id
                         WHERE p.IsActive = TRUE";
         
+        if (branchId.HasValue)
+        {
+            baseSql += " AND p.BranchId = @BranchId";
+        }
+        
         if (!string.IsNullOrWhiteSpace(search))
         {
             baseSql += " AND (p.InvoiceNumber ILIKE @Search OR p.PaymentType ILIKE @Search OR p.Status ILIKE @Search OR s.Name ILIKE @Search OR u.FullName ILIKE @Search)";
         }
         
         var countSql = $"SELECT COUNT(*) {baseSql}";
-        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = searchPattern });
+        var totalCount = await connection.ExecuteScalarAsync<int>(countSql, new { Search = searchPattern, BranchId = branchId });
         
         var dataSql = $"SELECT p.*, s.Name as SupplierName, u.FullName as UserName, b.Name as BranchName {baseSql} ORDER BY p.CreatedAt DESC LIMIT @Limit OFFSET @Offset";
-        var items = await connection.QueryAsync<dynamic>(dataSql, new { Search = searchPattern, Limit = limit, Offset = offset });
+        var items = await connection.QueryAsync<dynamic>(dataSql, new { Search = searchPattern, Limit = limit, Offset = offset, BranchId = branchId });
         
         return new BillingSystem.Domain.Models.PagedResult<dynamic>
         {

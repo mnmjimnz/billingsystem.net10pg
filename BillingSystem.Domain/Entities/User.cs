@@ -14,6 +14,8 @@ public class User : BaseEntity
     public DateTime? TerminationDate { get; set; }
     public string? TerminationReason { get; set; }
     
+    public bool IsAdmin { get; set; } = false;
+
     // HR Fields
     public string? JobTitle { get; set; }
     public string? DocumentId { get; set; } // DPI/Cedula/SSN

@@ -6,6 +6,6 @@ namespace BillingSystem.Application.Interfaces;
 public interface IStockTransferService
 {
     Task<int> TransferStockAsync(StockTransfer transfer);
-    Task<IEnumerable<StockTransfer>> GetAllTransfersAsync();
-    Task<BillingSystem.Domain.Models.PagedResult<StockTransfer>> GetPagedTransfersAsync(int page, int pageSize);
+    Task<IEnumerable<StockTransfer>> GetAllTransfersAsync(int? branchId = null);
+    Task<BillingSystem.Domain.Models.PagedResult<StockTransfer>> GetPagedTransfersAsync(int page, int pageSize, int? branchId = null);
 }

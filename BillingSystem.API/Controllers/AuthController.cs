@@ -38,7 +38,7 @@ public class AuthController : ControllerBase
         var token = GenerateJwtToken(user);
         var perms = await _roleRepository.GetPermissionsByRoleIdAsync(user.RoleId);
         var permissions = perms.Select(p => p.SystemName).ToList();
-        return Ok(new { token, user = new { user.Id, user.Username, user.FullName, user.RoleId, user.BranchId }, permissions });
+        return Ok(new { token, user = new { user.Id, user.Username, user.FullName, user.RoleId, user.BranchId, user.IsAdmin }, permissions });
     }
 
     private string GenerateJwtToken(User user)
@@ -55,7 +55,8 @@ public class AuthController : ControllerBase
             new Claim("UserId", user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Role, user.RoleId.ToString()),
-            new Claim("BranchId", user.BranchId?.ToString() ?? "0")
+            new Claim("BranchId", user.BranchId?.ToString() ?? "0"),
+            new Claim("IsAdmin", user.IsAdmin.ToString())
         };
 
         var token = new JwtSecurityToken(

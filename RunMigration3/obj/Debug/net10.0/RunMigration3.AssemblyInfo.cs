@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RunMigration3")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+15b9c2d9845725a47040a9d06bb6c2bb409aed1a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80aa77328bbdaa10cb57dde50c81fc3822d31cd9")]
 [assembly: System.Reflection.AssemblyProductAttribute("RunMigration3")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RunMigration3")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

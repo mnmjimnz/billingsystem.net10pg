@@ -2,6 +2,7 @@ using BillingSystem.Domain.Entities;
 using BillingSystem.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BillingSystem.API.Extensions;
 
 namespace BillingSystem.API.Controllers;
 
@@ -25,9 +26,13 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("paged")]
-    public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetPaged([FromQuery] string search = "", [FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] int? branchId = null)
     {
-        return Ok(await _productRepository.GetPagedAsync(search, page, pageSize));
+        if (!User.IsAdmin())
+        {
+            branchId = User.GetBranchId();
+        }
+        return Ok(await _productRepository.GetPagedAsync(search, page, pageSize, branchId));
     }
 
     [HttpGet("{id}")]

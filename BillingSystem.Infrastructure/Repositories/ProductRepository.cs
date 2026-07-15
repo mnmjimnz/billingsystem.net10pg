@@ -139,18 +139,24 @@ public class ProductRepository : IProductRepository
     }
     // --------------------------------------
 
-    public async Task<BillingSystem.Domain.Models.PagedResult<Product>> GetPagedAsync(string search, int page, int pageSize)
+    public Task<BillingSystem.Domain.Models.PagedResult<Product>> GetPagedAsync(string search, int page, int pageSize)
+    {
+        return GetPagedAsync(search, page, pageSize, null);
+    }
+
+    public async Task<BillingSystem.Domain.Models.PagedResult<Product>> GetPagedAsync(string search, int page, int pageSize, int? branchId = null)
     {
         using var connection = _db.CreateConnection();
         var searchCondition = string.IsNullOrWhiteSpace(search) ? "" : "WHERE Name ILIKE @Search OR Barcode ILIKE @Search";
         
-        // Now, we need to return the TOTAL stock across all branches, or at least the global stock.
-        // For backwards compatibility before we drop the global stock column, we can return the global stock.
-        // Wait, if purchases/sales ONLY update branch stock, the global stock won't change.
-        // Let's dynamically sum the branch stock.
+        // Return stock for the specific branch if provided, otherwise sum across all branches
+        var stockQuery = branchId.HasValue 
+            ? "COALESCE((SELECT SUM(Stock) FROM ProductStocks ps WHERE ps.ProductId = p.Id AND ps.BranchId = @BranchId), 0)"
+            : "COALESCE((SELECT SUM(Stock) FROM ProductStocks ps WHERE ps.ProductId = p.Id), 0)";
+
         var sql = $@"
             SELECT p.*, c.Name as CategoryName,
-                   COALESCE((SELECT SUM(Stock) FROM ProductStocks ps WHERE ps.ProductId = p.Id), 0) as CalculatedTotalStock
+                   {stockQuery} as CalculatedTotalStock
             FROM Products p
             LEFT JOIN Categories c ON p.CategoryId = c.Id
             {searchCondition}
@@ -165,7 +171,8 @@ public class ProductRepository : IProductRepository
         { 
             Search = $"%{search}%", 
             Offset = (page - 1) * pageSize, 
-            PageSize = pageSize 
+            PageSize = pageSize,
+            BranchId = branchId
         });
 
         var items = await multi.ReadAsync<dynamic>();

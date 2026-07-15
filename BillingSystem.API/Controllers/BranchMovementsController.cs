@@ -3,6 +3,7 @@ using BillingSystem.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using BillingSystem.API.Extensions;
 
 namespace BillingSystem.API.Controllers;
 
@@ -21,6 +22,10 @@ public class BranchMovementsController : ControllerBase
     [HttpGet("branch/{branchId}")]
     public async Task<IActionResult> GetByBranch(int branchId)
     {
+        if (!User.IsAdmin() && User.GetBranchId() != branchId)
+        {
+            return Forbid();
+        }
         var movements = await _movementService.GetMovementsByBranchIdAsync(branchId);
         return Ok(movements);
     }
@@ -41,6 +46,11 @@ public class BranchMovementsController : ControllerBase
             return Unauthorized("Token de usuario inválido.");
         }
 
+        if (!User.IsAdmin() && User.GetBranchId() != movement.BranchId)
+        {
+            return Forbid();
+        }
+
         var result = await _movementService.RegisterMovementAsync(movement);
         if (result.IsSuccess)
         {
@@ -53,6 +63,10 @@ public class BranchMovementsController : ControllerBase
     [HttpGet("branch/{branchId}/paged")]
     public async Task<IActionResult> GetPagedByBranch(int branchId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
+        if (!User.IsAdmin() && User.GetBranchId() != branchId)
+        {
+            return Forbid();
+        }
         var movements = await _movementService.GetPagedMovementsByBranchIdAsync(branchId, page, pageSize);
         return Ok(movements);
     }
