@@ -23,11 +23,11 @@ public class AccountingService : IAccountingService
 
     public async Task RecordSaleAsync(Order order, decimal costOfGoodsSold)
     {
-        var cajaId = await GetAccountIdByCode("1.01.01");
-        var cxcId = await GetAccountIdByCode("1.01.03");
-        var ventasId = await GetAccountIdByCode("4.01.01");
-        var costoVentasId = await GetAccountIdByCode("5.01.01");
-        var inventarioId = await GetAccountIdByCode("1.01.04");
+        var cajaId = await GetAccountIdByCode("1101");
+        var cxcId = await GetAccountIdByCode("1102");
+        var ventasId = await GetAccountIdByCode("4100");
+        var costoVentasId = await GetAccountIdByCode("5100");
+        var inventarioId = await GetAccountIdByCode("1103");
 
         var entry = new JournalEntry
         {
@@ -62,12 +62,12 @@ public class AccountingService : IAccountingService
 
     public async Task RecordPosSaleAsync(Sale sale, decimal costOfGoodsSold)
     {
-        var cajaId = await GetAccountIdByCode("1.01.01"); // Efectivo y equivalentes
-        var cxcId = await GetAccountIdByCode("1.01.03"); // Cuentas por cobrar
-        var ventasId = await GetAccountIdByCode("4.01.01"); // Ingresos por ventas
-        var costoVentasId = await GetAccountIdByCode("5.01.01"); // Costo de ventas
-        var inventarioId = await GetAccountIdByCode("1.01.04"); // Inventarios
-        var ivaId = await GetAccountIdByCode("2.01.02"); // IVA por Pagar
+        var cajaId = await GetAccountIdByCode("1101"); // Efectivo y equivalentes
+        var cxcId = await GetAccountIdByCode("1102"); // Cuentas por cobrar
+        var ventasId = await GetAccountIdByCode("4100"); // Ingresos por ventas
+        var costoVentasId = await GetAccountIdByCode("5100"); // Costo de ventas
+        var inventarioId = await GetAccountIdByCode("1103"); // Inventarios
+        var ivaId = await GetAccountIdByCode("2102"); // IVA por Pagar
 
         var details = new List<JournalEntryDetail>();
 
@@ -108,9 +108,9 @@ public class AccountingService : IAccountingService
 
     public async Task RecordPurchaseAsync(Purchase purchase)
     {
-        var inventarioId = await GetAccountIdByCode("1.01.04");
-        var cajaId = await GetAccountIdByCode("1.01.01");
-        var cxpId = await GetAccountIdByCode("2.01.01");
+        var inventarioId = await GetAccountIdByCode("1103");
+        var cajaId = await GetAccountIdByCode("1101");
+        var cxpId = await GetAccountIdByCode("2101");
 
         var entry = new JournalEntry
         {
@@ -148,10 +148,10 @@ public class AccountingService : IAccountingService
 
     public async Task RecordPayrollAsync(PayrollRun payrollRun, IEnumerable<dynamic> detailsDynamic)
     {
-        var sueldosGastoId = await GetAccountIdByCode("6.01.01");
-        var sueldosPagarId = await GetAccountIdByCode("2.01.04");
-        var retencionesId = await GetAccountIdByCode("2.01.03");
-        var bancosId = await GetAccountIdByCode("1.01.02");
+        var sueldosGastoId = await GetAccountIdByCode("5300"); // Gastos de Nómina is 5300
+        var sueldosPagarId = await GetAccountIdByCode("2101"); // Using 2101 Cuentas por pagar for now
+        var retencionesId = await GetAccountIdByCode("2102"); // Using 2102 Impuestos por pagar for now
+        var bancosId = await GetAccountIdByCode("1101");
 
         decimal totalBase = 0;
         decimal totalDeductions = 0;
@@ -190,8 +190,8 @@ public class AccountingService : IAccountingService
         var selectedAccount = accounts.FirstOrDefault(a => a.Id == movement.AccountId.Value);
         if (selectedAccount == null) return false;
 
-        int cajaId = accounts.FirstOrDefault(a => a.Code == "1.01.01")?.Id ?? 0;
-        int bancoId = accounts.FirstOrDefault(a => a.Code == "1.01.02")?.Id ?? 0;
+        int cajaId = accounts.FirstOrDefault(a => a.Code == "1101")?.Id ?? 0;
+        int bancoId = accounts.FirstOrDefault(a => a.Code == "1101")?.Id ?? 0; // Fallback to 1101 since 1104 is not seeded yet
 
         int cashAccountId = movement.PaymentMethod == "Bank" ? bancoId : cajaId;
 
