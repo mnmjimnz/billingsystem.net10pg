@@ -17,6 +17,7 @@ public class SaleService : ISaleService
     private readonly ICashRegisterRepository _cashRepo;
     private readonly ISettingsRepository _settingsRepo;
     private readonly IAccountingService _accountingService;
+    private readonly ICustomerRepository _customerRepo;
 
     public SaleService(
         ISaleRepository saleRepo,
@@ -27,7 +28,8 @@ public class SaleService : ISaleService
         INotificationService notificationService,
         ICashRegisterRepository cashRepo,
         ISettingsRepository settingsRepo,
-        IAccountingService accountingService)
+        IAccountingService accountingService,
+        ICustomerRepository customerRepo)
     {
         _saleRepo = saleRepo;
         _productRepo = productRepo;
@@ -38,6 +40,7 @@ public class SaleService : ISaleService
         _cashRepo = cashRepo;
         _settingsRepo = settingsRepo;
         _accountingService = accountingService;
+        _customerRepo = customerRepo;
     }
 
     public async Task<(int SaleId, string TicketNumber)> CreateSaleAsync(CreateSaleRequest request, int userId, int branchId)
@@ -67,10 +70,43 @@ public class SaleService : ISaleService
             }
         }
 
+        // Handle Customer ID logic
+        int finalCustomerId = 1;
+        if (request.CustomerId.HasValue && request.CustomerId.Value > 0)
+        {
+            var existingCustomer = await _customerRepo.GetByIdAsync(request.CustomerId.Value);
+            if (existingCustomer == null)
+            {
+                throw new Exception("El cliente seleccionado no existe.");
+            }
+            finalCustomerId = existingCustomer.Id;
+        }
+        else
+        {
+            // Default to "Cliente Público General"
+            var allCustomers = await _customerRepo.GetAllAsync();
+            var defaultCustomer = allCustomers.FirstOrDefault(c => c.Name == "Cliente Público General" || c.Name == "Clientes Varios");
+            if (defaultCustomer == null)
+            {
+                var newCustomer = new Customer
+                {
+                    Name = "Cliente Público General",
+                    Email = "publico@general.com",
+                    Phone = "00000000",
+                    Address = "N/A"
+                };
+                finalCustomerId = await _customerRepo.AddAsync(newCustomer);
+            }
+            else
+            {
+                finalCustomerId = defaultCustomer.Id;
+            }
+        }
+
         var sale = new Sale
         {
             TicketNumber = "TKT-" + DateTime.Now.ToString("yyyyMMddHHmmss"),
-            CustomerId = request.CustomerId ?? 1,
+            CustomerId = finalCustomerId,
             UserId = userId == 0 ? 1 : userId,
             BranchId = branchId == 0 ? 1 : branchId,
             Subtotal = request.Subtotal,
