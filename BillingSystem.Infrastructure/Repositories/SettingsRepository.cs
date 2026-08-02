@@ -17,12 +17,7 @@ public class SettingsRepository : ISettingsRepository
     public async Task<CompanySetting> GetSettingsAsync()
     {
         using var connection = _db.CreateConnection();
-        var settings = await connection.QueryFirstOrDefaultAsync<CompanySetting>("SELECT * FROM CompanySettings LIMIT 1");
-        if (settings == null)
-        {
-            settings = new CompanySetting { CompanyName = "Nexus POS", TaxPercentage = 13 };
-        }
-        return settings;
+        return await connection.QueryFirstOrDefaultAsync<CompanySetting>("SELECT * FROM CompanySettings LIMIT 1");
     }
 
     public async Task UpdateSettingsAsync(CompanySetting settings)
